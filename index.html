@@ -25,21 +25,10 @@
         .btn-outline { background: #f1f5f9; color: #1e293b; }
         .btn-outline:hover { background: #e2e8f0; }
         
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin-bottom: 16px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 16px; }
         .stat-card { background: white; border-radius: 12px; padding: 12px 14px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
         .stat-card .number { font-size: 24px; font-weight: 700; }
         .stat-card .label { font-size: 12px; color: #94a3b8; margin-top: 2px; }
-        .stat-card.top-rank { grid-column: span 2; text-align: left; background: linear-gradient(135deg, #fff7ed, #fef3c7); border: 1px solid #fde68a; }
-        .stat-card.top-rank .label { color: #92400e; margin-bottom: 6px; font-size: 13px; }
-        .top-list { display: flex; flex-direction: column; gap: 6px; }
-        .top-row { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #1e293b; }
-        .top-row .rank { font-size: 16px; min-width: 22px; }
-        .top-row .rank-1 { color: #f59e0b; }
-        .top-row .rank-2 { color: #94a3b8; }
-        .top-row .rank-3 { color: #b45309; }
-        .top-row .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .top-row .votes { color: #dc2626; font-weight: 700; }
-        .top-row.empty { color: #94a3b8; font-weight: 400; font-size: 12px; }
 
         .user-input { padding: 6px 12px; border-radius: 20px; border: 1.5px solid #e2e8f0; font-size: 13px; outline: none; background: white; width: 110px; transition: border 0.2s; }
         .user-input:focus { border-color: #3b82f6; }
@@ -48,14 +37,16 @@
         .filters { display: flex; gap: 8px; flex-wrap: wrap; background: white; padding: 10px 14px; border-radius: 12px; margin-bottom: 16px; align-items: center; }
         .filters select, .filters input { padding: 6px 12px; border-radius: 20px; border: 1.5px solid #e2e8f0; font-size: 13px; outline: none; background: white; }
         .filters select:focus, .filters input:focus { border-color: #3b82f6; }
+        .result-count { font-size: 12px; color: #94a3b8; padding: 0 4px 10px; }
         
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
         
-        .card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.06); transition: 0.2s; }
+        .card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.06); transition: 0.2s; display: flex; flex-direction: column; cursor: pointer; }
         .card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
-        .card-img { width: 100%; height: 160px; background: #eef2f6; display: flex; align-items: center; justify-content: center; font-size: 40px; color: #94a3b8; cursor: pointer; border-bottom: 1px solid #f1f5f9; }
+        .card-img { width: 100%; height: 160px; background: #eef2f6; display: flex; align-items: center; justify-content: center; font-size: 40px; color: #94a3b8; border-bottom: 1px solid #f1f5f9; position: relative; flex-shrink: 0; }
         .card-img img { width: 100%; height: 100%; object-fit: cover; }
-        .card-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px; }
+        .card-img .img-count { position: absolute; right: 8px; bottom: 8px; background: rgba(0,0,0,0.6); color: white; font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+        .card-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
         .card-title { font-size: 17px; font-weight: 700; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
         .card-title .name { word-break: break-word; flex: 1; }
         .card-meta { display: flex; flex-wrap: wrap; gap: 6px 10px; font-size: 12px; color: #64748b; }
@@ -75,9 +66,9 @@
         .card-stars { display: flex; gap: 2px; font-size: 18px; }
         .card-stars span { color: #cbd5e1; }
         .card-stars span.active { color: #facc15; }
-        .card-comment { font-size: 13px; color: #475569; background: #f8fafc; padding: 6px 10px; border-radius: 8px; line-height: 1.4; }
+        .card-comment { font-size: 13px; color: #475569; background: #f8fafc; padding: 6px 10px; border-radius: 8px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .card-author { font-size: 11px; color: #94a3b8; margin-top: 4px; }
-        .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; border-top: 1px solid #f1f5f9; padding-top: 10px; }
+        .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; border-top: 1px solid #f1f5f9; padding-top: 10px; }
         .vote-btn { background: #f1f5f9; border: none; padding: 2px 12px; border-radius: 20px; font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600; }
         .vote-btn:hover { background: #e2e8f0; }
         .vote-btn.voted { background: #dcfce7; color: #166534; }
@@ -86,6 +77,30 @@
         .card-actions button:hover { background: #f1f5f9; color: #1e293b; }
         .card-actions .del:hover { color: #ef4444; background: #fee2e2; }
         .empty { text-align: center; padding: 40px 20px; color: #94a3b8; font-size: 16px; grid-column: 1 / -1; }
+
+        /* 详情模态框 */
+        .detail-modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.6); z-index: 100; padding: 20px; overflow-y: auto; }
+        .detail-modal.active { display: flex; align-items: flex-start; justify-content: center; }
+        .detail-card { background: white; border-radius: 20px; max-width: 600px; width: 100%; margin: 20px 0; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
+        .detail-close { position: sticky; top: 12px; float: right; z-index: 10; background: rgba(255,255,255,0.95); border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.15); margin: 12px; }
+        .detail-img-slider { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; height: 320px; background: #eef2f6; }
+        .detail-img-slider img { flex-shrink: 0; width: 100%; height: 100%; object-fit: cover; scroll-snap-align: start; }
+        .detail-img-slider::-webkit-scrollbar { height: 4px; }
+        .detail-img-slider::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 2px; }
+        .detail-img-empty { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 60px; color: #cbd5e1; }
+        .detail-body { padding: 20px 24px 24px; }
+        .detail-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+        .detail-meta { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 14px; color: #64748b; margin-bottom: 14px; }
+        .detail-stars { display: flex; gap: 2px; font-size: 22px; margin: 8px 0; }
+        .detail-stars span { color: #cbd5e1; }
+        .detail-stars span.active { color: #facc15; }
+        .detail-comment { font-size: 15px; color: #1e293b; background: #f8fafc; padding: 14px 16px; border-radius: 10px; line-height: 1.6; margin: 14px 0; white-space: pre-wrap; word-break: break-word; }
+        .detail-author { font-size: 13px; color: #94a3b8; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9; }
+        .detail-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+        .detail-add-img { margin-top: 14px; padding: 10px; border: 2px dashed #cbd5e1; border-radius: 10px; text-align: center; color: #64748b; font-size: 13px; cursor: pointer; }
+        .detail-add-img:hover { border-color: #3b82f6; color: #3b82f6; }
+        .detail-img-thumbs { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+        .detail-img-thumbs img { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; }
         
         /* 表单页面 */
         .form-page { display: none; background: white; border-radius: 20px; padding: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
@@ -98,12 +113,14 @@
         .form-group label { font-weight: 600; font-size: 13px; color: #334155; }
         .form-group input, .form-group select, .form-group textarea { padding: 8px 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; transition: 0.2s; background: #fafbfc; }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #3b82f6; outline: none; background: white; }
-        .form-group textarea { min-height: 60px; resize: vertical; }
+        .form-group textarea { min-height: 140px; resize: vertical; font-family: inherit; line-height: 1.6; }
         .form-group .star-selector { display: flex; gap: 4px; font-size: 28px; cursor: pointer; }
         .form-group .star-selector span { color: #cbd5e1; }
         .form-group .star-selector span.active { color: #facc15; }
         .form-group .upload-area { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
         .form-group .upload-area img { width: 80px; height: 80px; object-fit: cover; border-radius: 12px; border: 1.5px solid #e2e8f0; }
+        .form-group .upload-area .img-wrap { position: relative; }
+        .form-group .upload-area .img-remove { position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; background: #ef4444; color: white; border-radius: 50%; border: none; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .form-group .upload-placeholder { width: 80px; height: 80px; border-radius: 12px; border: 2px dashed #d1d5db; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #94a3b8; cursor: pointer; background: #fafbfc; }
         .form-group .upload-placeholder:hover { border-color: #3b82f6; }
         .form-page .btn-row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 2px solid #f1f5f9; }
@@ -136,18 +153,6 @@
         </div>
     </div>
 
-    <div class="stats hide-when-form" id="statsArea">
-        <div class="stat-card"><div class="number" id="totalCount">0</div><div class="label">📋 总提案</div></div>
-        <div class="stat-card"><div class="number" id="avgPrice">0</div><div class="label">💰 平均消费</div></div>
-        <div class="stat-card"><div class="number" id="topVote">0</div><div class="label">👍 最高票数</div></div>
-        <div class="stat-card top-rank" id="topRankCard">
-            <div class="label">🏆 当前领先</div>
-            <div class="top-list" id="topList">
-                <div class="top-row empty">还没有人投票，加一条试试</div>
-            </div>
-        </div>
-    </div>
-
     <div class="filters hide-when-form" id="filtersArea">
         <select id="filterCategory" onchange="render()">
             <option value="all">🏷️ 全部分类</option>
@@ -166,10 +171,16 @@
             <option value="一般般">🤔 一般般</option>
             <option value="看你们">👀 看你们</option>
         </select>
-        <input type="text" id="filterKeyword" placeholder="🔍 搜索..." oninput="render()" />
+        <input type="text" id="filterKeyword" placeholder="🔍 搜索名称..." oninput="render()" style="flex:1;min-width:140px" />
     </div>
+    <div class="result-count hide-when-form" id="resultCount">📋 共 0 条</div>
 
     <div class="grid hide-when-form" id="gridContainer"></div>
+
+    <!-- 详情模态框 -->
+    <div class="detail-modal" id="detailModal" onclick="if(event.target===this)closeDetail()">
+        <div class="detail-card" id="detailCard"></div>
+    </div>
 
     <!-- 表单 -->
     <div class="form-page" id="formPage">
@@ -193,10 +204,6 @@
             <div class="form-group">
                 <label>📍 名称 *</label>
                 <input id="formName" placeholder="山葵家·日料" />
-            </div>
-            <div class="form-group">
-                <label>🔗 种草来源</label>
-                <input id="formSource" placeholder="小红书链接或推荐人" />
             </div>
             <div class="form-group">
                 <label>📌 位置</label>
@@ -233,14 +240,14 @@
             </div>
             <div class="form-group full">
                 <label>💬 锐评</label>
-                <textarea id="formComment" placeholder="写点感受..."></textarea>
+                <textarea id="formComment" placeholder="写点感受...可以多写一些"></textarea>
             </div>
             <div class="form-group full">
-                <label>🖼️ 图片</label>
+                <label>🖼️ 图片（最多 4 张，会自动压缩）</label>
                 <div class="upload-area" id="formImagePreview">
                     <div class="upload-placeholder" onclick="document.getElementById('formImageInput').click()">📷</div>
                 </div>
-                <input type="file" id="formImageInput" accept="image/*" style="display:none" onchange="handleImage(event)" />
+                <input type="file" id="formImageInput" accept="image/*" multiple style="display:none" onchange="handleImages(event)" />
             </div>
         </div>
         <div class="btn-row">
@@ -332,13 +339,17 @@
                     if (Array.isArray(msg)) {
                         // 后到覆盖先到：直接替换本地 DATA
                         isApplyingRemote = true;
-                        DATA = msg.map(item => ({
-                            ...item,
-                            votes: item.votes || 0,
-                            voters: Array.isArray(item.voters) ? item.voters : [],
-                            createdBy: item.createdBy || '匿名',
-                            createdAt: item.createdAt || 0
-                        }));
+                        DATA = msg.map(item => {
+                            let images = Array.isArray(item.images) ? item.images : (item.image ? [item.image] : []);
+                            return {
+                                ...item,
+                                votes: item.votes || 0,
+                                voters: Array.isArray(item.voters) ? item.voters : [],
+                                createdBy: item.createdBy || '匿名',
+                                createdAt: item.createdAt || 0,
+                                images: images
+                            };
+                        });
                         localStorage.setItem(KEY, JSON.stringify(DATA));
                         render();
                         isApplyingRemote = false;
@@ -390,15 +401,19 @@
             if (stored) {
                 try { DATA = JSON.parse(stored); } catch(e) { DATA = []; }
             }
-            // 不再生成种子数据：协作场景下 A、B 各自生成种子会冲突，
-            // 不如空状态提示用户"点击添加"
-            DATA = DATA.map(item => ({
-                ...item,
-                votes: item.votes || 0,
-                voters: Array.isArray(item.voters) ? item.voters : [],
-                createdBy: item.createdBy || '匿名',
-                createdAt: item.createdAt || 0
-            }));
+            // 兼容旧字段：image（单图）→ images（数组）
+            DATA = DATA.map(item => {
+                let images = Array.isArray(item.images) ? item.images : (item.image ? [item.image] : []);
+                return {
+                    ...item,
+                    votes: item.votes || 0,
+                    voters: Array.isArray(item.voters) ? item.voters : [],
+                    createdBy: item.createdBy || '匿名',
+                    createdAt: item.createdAt || 0,
+                    images: images,
+                    ...(item.image ? { image: undefined } : {})
+                };
+            });
             // 不调 saveData（避免首次打开空数据强制广播覆盖别人）
             localStorage.setItem(KEY, JSON.stringify(DATA));
             broadcastData(false);  // 只在有数据时广播
@@ -431,58 +446,48 @@
                 return (a.createdAt || 0) - (b.createdAt || 0);
             });
 
-            document.getElementById('totalCount').textContent = DATA.length;
-            const prices = DATA.map(i => Number(i.price) || 0).filter(p => p > 0);
-            const avg = prices.length ? (prices.reduce((a,b)=>a+b,0) / prices.length).toFixed(0) : 0;
-            document.getElementById('avgPrice').textContent = avg ? '¥'+avg : '0';
-            const top = DATA.reduce((max, i) => Math.max(max, i.votes || 0), 0);
-            document.getElementById('topVote').textContent = top;
-
-            // Top 3 排行榜（全量，不受筛选影响）
-            const topList = document.getElementById('topList');
-            const ranked = [...DATA].filter(i => (i.votes || 0) > 0).sort((a, b) => {
-                const diff = (b.votes || 0) - (a.votes || 0);
-                if (diff !== 0) return diff;
-                return (a.createdAt || 0) - (b.createdAt || 0);
-            }).slice(0, 3);
-            if (ranked.length === 0) {
-                topList.innerHTML = '<div class="top-row empty">还没有人投票，加一条试试</div>';
+            // 顶部统计：仅显示筛选后的总数（淘宝列表风格）
+            const resultCount = document.getElementById('resultCount');
+            if (DATA.length === 0) {
+                resultCount.textContent = '📋 还没有内容，点击右上 ➕ 添加';
+            } else if (filtered.length === DATA.length) {
+                resultCount.textContent = `📋 共 ${filtered.length} 条`;
             } else {
-                const medals = ['🥇','🥈','🥉'];
-                topList.innerHTML = ranked.map((it, idx) => `
-                    <div class="top-row">
-                        <span class="rank rank-${idx+1}">${medals[idx]}</span>
-                        <span class="name">${escape(it.name)}</span>
-                        <span class="votes">${it.votes}票</span>
-                    </div>
-                `).join('');
+                resultCount.textContent = `📋 ${filtered.length} / ${DATA.length} 条`;
             }
 
             const container = document.getElementById('gridContainer');
             if (filtered.length === 0) {
-                container.innerHTML = '<div class="empty">🧩 还没有内容，点击右上 ➕ 添加\n或者邀请朋友打开同一个链接协作</div>';
+                container.innerHTML = '<div class="empty">🧩 没有匹配的内容</div>';
                 return;
             }
+
+            const tagColor = { '餐厅':'tag-orange','看戏':'tag-purple','展览':'tag-pink','咖啡厅':'tag-green','户外':'tag-green' };
+            const intentMap = { '超想去':'tag-super','还可以':'tag-good','有点吸引我':'tag-soso','一般般':'tag-meh','看你们':'tag-up2u' };
+            const user = getUserName();
 
             let html = '';
             filtered.forEach(item => {
                 const stars = [1,2,3,4,5].map(s => 
                     `<span class="${s <= (item.rating||0) ? 'active' : ''}">★</span>`
                 ).join('');
-                const imgHtml = item.image ? `<img src="${item.image}" />` : '📸';
-                const tagColor = { '餐厅':'tag-orange','看戏':'tag-purple','展览':'tag-pink','咖啡厅':'tag-green','户外':'tag-green' }[item.category] || 'tag-gray';
-                const intentMap = { '超想去':'tag-super','还可以':'tag-good','有点吸引我':'tag-soso','一般般':'tag-meh','看你们':'tag-up2u' };
+                // 兼容旧字段 image（单图）→ images（数组）
+                const images = Array.isArray(item.images) ? item.images : (item.image ? [item.image] : []);
+                const imgHtml = images.length > 0
+                    ? `<img src="${images[0]}" /><span class="img-count">${images.length}张</span>`
+                    : '📸';
+                const tagCls = tagColor[item.category] || 'tag-gray';
                 const intentCls = intentMap[item.intention] || 'tag-up2u';
-                // id 统一转字符串再嵌入 HTML 属性，避免特殊字符破坏 onclick
                 const safeId = String(item.id).replace(/'/g, "\\'");
+                const isOwner = !item.createdBy || item.createdBy === user || item.createdBy === '匿名';
 
                 html += `
-                    <div class="card">
-                        <div class="card-img" onclick="uploadImage('${safeId}')">${imgHtml}</div>
+                    <div class="card" onclick="openDetail('${safeId}')">
+                        <div class="card-img">${imgHtml}</div>
                         <div class="card-body">
                             <div class="card-title">
                                 <span class="name">${escape(item.name)}</span>
-                                <span class="tag ${tagColor}">${item.category}</span>
+                                <span class="tag ${tagCls}">${item.category}</span>
                             </div>
                             <div class="card-meta">
                                 <span>📍 ${escape(item.location || '未填')}</span>
@@ -491,17 +496,16 @@
                             <div class="card-stars">${stars}</div>
                             ${item.comment ? `<div class="card-comment">💬 ${escape(item.comment)}</div>` : ''}
                             <div class="card-meta" style="font-size:11px;flex-wrap:wrap;">
-                                ${item.source ? `🔗 ${escape(item.source)}` : ''}
                                 ${item.time ? ` 🕐 ${escape(item.time.replace('T',' '))}` : ''}
                                 <span class="tag ${intentCls}">${item.intention||'看你们'}</span>
                             </div>
                             <div class="card-author">by ${escape(item.createdBy || '匿名')} · ${item.createdAt ? new Date(item.createdAt).toLocaleString('zh-CN', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : ''}</div>
                             <div class="card-footer">
-                                <button class="vote-btn ${hasVoted(item) ? 'voted' : ''}" onclick="vote('${safeId}')">${hasVoted(item) ? '✅' : '👍'} <span id="v-${safeId}">${item.votes||0}</span></button>
-                                <div class="card-actions">
-                                    <button onclick="openEditForm('${safeId}')">✏️</button>
-                                    <button class="del" onclick="deleteItem('${safeId}')">🗑️</button>
-                                </div>
+                                <button class="vote-btn ${hasVoted(item) ? 'voted' : ''}" onclick="event.stopPropagation();vote('${safeId}')">${hasVoted(item) ? '✅' : '👍'} <span id="v-${safeId}">${item.votes||0}</span></button>
+                                ${isOwner ? `<div class="card-actions">
+                                    <button onclick="event.stopPropagation();openEditForm('${safeId}')">✏️</button>
+                                    <button class="del" onclick="event.stopPropagation();deleteItem('${safeId}')">🗑️</button>
+                                </div>` : ''}
                             </div>
                         </div>
                     </div>
@@ -509,6 +513,108 @@
             });
             container.innerHTML = html;
         }
+
+        // ========== 详情模态框 ==========
+        function openDetail(id) {
+            const item = DATA.find(d => String(d.id) === String(id));
+            if (!item) return;
+            const images = Array.isArray(item.images) ? item.images : (item.image ? [item.image] : []);
+            const tagColor = { '餐厅':'tag-orange','看戏':'tag-purple','展览':'tag-pink','咖啡厅':'tag-green','户外':'tag-green' };
+            const intentMap = { '超想去':'tag-super','还可以':'tag-good','有点吸引我':'tag-soso','一般般':'tag-meh','看你们':'tag-up2u' };
+            const tagCls = tagColor[item.category] || 'tag-gray';
+            const intentCls = intentMap[item.intention] || 'tag-up2u';
+            const stars = [1,2,3,4,5].map(s => 
+                `<span class="${s <= (item.rating||0) ? 'active' : ''}">★</span>`
+            ).join('');
+            const user = getUserName();
+            const isOwner = !item.createdBy || item.createdBy === user || item.createdBy === '匿名';
+            const safeId = String(item.id).replace(/'/g, "\\'");
+
+            // 图片区：横向滑动
+            const sliderHtml = images.length > 0
+                ? images.map(src => `<img src="${src}" />`).join('')
+                : '<div class="detail-img-empty">📸</div>';
+
+            document.getElementById('detailCard').innerHTML = `
+                <button class="detail-close" onclick="closeDetail()">×</button>
+                <div class="detail-img-slider">${sliderHtml}</div>
+                <div class="detail-body">
+                    <div class="detail-title">
+                        ${escape(item.name)}
+                        <span class="tag ${tagCls}" style="margin-left:8px;vertical-align:middle">${item.category}</span>
+                    </div>
+                    <div class="detail-meta">
+                        <span>📍 ${escape(item.location || '未填')}</span>
+                        <span class="card-price">¥${item.price||0} <small>人均</small></span>
+                        ${item.time ? `<span> 🕐 ${escape(item.time.replace('T',' '))}</span>` : ''}
+                        <span class="tag ${intentCls}">${item.intention||'看你们'}</span>
+                    </div>
+                    <div class="detail-stars">${stars}</div>
+                    ${item.comment ? `<div class="detail-comment">${escape(item.comment)}</div>` : ''}
+                    ${isOwner ? `
+                        <div class="detail-add-img" onclick="document.getElementById('detailImgInput').click()">
+                            ${images.length >= 4 ? '🚫 已满 4 张上限' : `📷 ${images.length ? '补充' : '上传'}图片（剩 ${4 - images.length} 张）`}
+                        </div>
+                        <input type="file" id="detailImgInput" accept="image/*" multiple style="display:none" onchange="addImagesToDetail('${safeId}', event)" />
+                    ` : `<div class="detail-img-thumbs">${images.map(src => `<img src="${src}" />`).join('')}</div>`}
+                    <div class="detail-author">by ${escape(item.createdBy || '匿名')} · ${item.createdAt ? new Date(item.createdAt).toLocaleString('zh-CN', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : ''}</div>
+                    <div class="detail-footer">
+                        <button class="vote-btn ${hasVoted(item) ? 'voted' : ''}" onclick="vote('${safeId}');openDetail('${safeId}')">${hasVoted(item) ? '✅ 已投' : '👍 投票'} <span>${item.votes||0}</span></button>
+                        ${isOwner ? `<div class="card-actions">
+                            <button onclick="closeDetail();openEditForm('${safeId}')">✏️ 编辑</button>
+                            <button class="del" onclick="closeDetail();deleteItem('${safeId}')">🗑️ 删除</button>
+                        </div>` : ''}
+                    </div>
+                </div>
+            `;
+            document.getElementById('detailModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDetail() {
+            document.getElementById('detailModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function addImagesToDetail(id, e) {
+            const item = DATA.find(d => String(d.id) === String(id));
+            if (!item) return;
+            // 权限：只有作者能加图
+            if (item.createdBy && item.createdBy !== getUserName()) {
+                alert('只有作者能修改图片');
+                return;
+            }
+            const files = Array.from(e.target.files);
+            if (!files.length) return;
+            let images = Array.isArray(item.images) ? item.images : (item.image ? [item.image] : []);
+            const remaining = 4 - images.length;
+            if (remaining <= 0) {
+                alert('已满 4 张上限');
+                e.target.value = '';
+                return;
+            }
+            const toProcess = files.slice(0, remaining);
+            if (files.length > remaining) alert(`只能再传 ${remaining} 张，多余的已忽略`);
+            let processed = 0;
+            toProcess.forEach(file => {
+                compressImage(file, (dataUrl) => {
+                    images.push(dataUrl);
+                    processed++;
+                    if (processed === toProcess.length) {
+                        item.images = images;
+                        if (item.image) delete item.image;
+                        saveData();
+                        openDetail(id);  // 重新打开详情刷新
+                    }
+                });
+            });
+            e.target.value = '';
+        }
+
+        // ESC 关闭详情
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeDetail();
+        });
 
         function escape(text) {
             if (!text) return '';
@@ -542,30 +648,14 @@
         function deleteItem(id) {
             const item = DATA.find(d => String(d.id) === String(id));
             if (!item) return;
+            // 权限检查：只有作者能删除
+            if (item.createdBy && item.createdBy !== getUserName()) {
+                alert('只能删除自己创建的卡片');
+                return;
+            }
             if (!confirm(`确定删除 "${item.name}" 吗？`)) return;
             DATA = DATA.filter(d => String(d.id) !== String(id));
             saveData();
-        }
-
-        // ========== 图片上传 ==========
-        function uploadImage(id) {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.onchange = function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = function(ev) {
-                    const item = DATA.find(d => String(d.id) === String(id));
-                    if (item) {
-                        item.image = ev.target.result;
-                        saveData();
-                    }
-                };
-                reader.readAsDataURL(file);
-            };
-            input.click();
         }
 
         // ========== 表单 ==========
@@ -575,7 +665,7 @@
             document.getElementById('formPageTitle').textContent = title;
             document.getElementById('editId').value = id || '';
             document.getElementById('formImagePreview').innerHTML = `<div class="upload-placeholder" onclick="document.getElementById('formImageInput').click()">📷</div>`;
-            document.getElementById('formImagePreview').dataset.imageData = '';
+            document.getElementById('formImagePreview').dataset.images = '[]';
             starValue = 0;
             document.getElementById('formRating').value = 0;
             updateStars();
@@ -591,7 +681,6 @@
             showForm('✨ 添加新去处', '');
             document.getElementById('formCategory').value = '餐厅';
             document.getElementById('formName').value = '';
-            document.getElementById('formSource').value = '';
             document.getElementById('formLocation').value = '';
             document.getElementById('formPrice').value = '';
             document.getElementById('formComment').value = '';
@@ -600,15 +689,23 @@
             document.getElementById('formRating').value = 0;
             starValue = 0;
             updateStars();
+            // 重置图片预览
+            const preview = document.getElementById('formImagePreview');
+            preview.innerHTML = '<div class="upload-placeholder" onclick="document.getElementById(\'formImageInput\').click()">📷</div>';
+            preview.dataset.images = '';
         }
 
         function openEditForm(id) {
             const item = DATA.find(d => String(d.id) === String(id));
             if (!item) return;
+            // 权限检查：只有作者能编辑
+            if (item.createdBy && item.createdBy !== getUserName()) {
+                alert('只能编辑自己创建的卡片');
+                return;
+            }
             showForm('✏️ 编辑', id);
             document.getElementById('formCategory').value = item.category || '餐厅';
             document.getElementById('formName').value = item.name || '';
-            document.getElementById('formSource').value = item.source || '';
             document.getElementById('formLocation').value = item.location || '';
             document.getElementById('formPrice').value = item.price || '';
             document.getElementById('formComment').value = item.comment || '';
@@ -620,17 +717,44 @@
 
             const preview = document.getElementById('formImagePreview');
             preview.innerHTML = '';
-            if (item.image) {
-                const img = document.createElement('img');
-                img.src = item.image;
-                preview.appendChild(img);
-                preview.dataset.imageData = item.image;
-            }
+            const images = Array.isArray(item.images) ? item.images : (item.image ? [item.image] : []);
+            preview.dataset.images = JSON.stringify(images);
+            images.forEach((src, idx) => {
+                preview.appendChild(makeImgWrap(src, idx));
+            });
             const ph = document.createElement('div');
             ph.className = 'upload-placeholder';
             ph.textContent = '📷';
             ph.onclick = () => document.getElementById('formImageInput').click();
             preview.appendChild(ph);
+        }
+
+        function makeImgWrap(src, idx) {
+            const wrap = document.createElement('div');
+            wrap.className = 'img-wrap';
+            const img = document.createElement('img');
+            img.src = src;
+            const btn = document.createElement('button');
+            btn.className = 'img-remove';
+            btn.textContent = '×';
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                const preview = document.getElementById('formImagePreview');
+                let arr = JSON.parse(preview.dataset.images || '[]');
+                arr.splice(idx, 1);
+                preview.dataset.images = JSON.stringify(arr);
+                // 重新渲染
+                preview.innerHTML = '';
+                arr.forEach((s, i) => preview.appendChild(makeImgWrap(s, i)));
+                const ph = document.createElement('div');
+                ph.className = 'upload-placeholder';
+                ph.textContent = '📷';
+                ph.onclick = () => document.getElementById('formImageInput').click();
+                preview.appendChild(ph);
+            };
+            wrap.appendChild(img);
+            wrap.appendChild(btn);
+            return wrap;
         }
 
         function setStar(val) {
@@ -647,24 +771,66 @@
             });
         }
 
-        function handleImage(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+        // 压缩图片：限制最大宽度 800px，质量 0.7
+        function compressImage(file, callback) {
             const reader = new FileReader();
             reader.onload = function(ev) {
-                const preview = document.getElementById('formImagePreview');
-                preview.innerHTML = '';
-                const img = document.createElement('img');
+                const img = new Image();
+                img.onload = function() {
+                    const MAX_W = 800;
+                    let w = img.width, h = img.height;
+                    if (w > MAX_W) {
+                        h = Math.round(h * (MAX_W / w));
+                        w = MAX_W;
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    // 用 jpeg 格式压缩，体积更小（图片透明会丢失，但相机照片无所谓）
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    callback(dataUrl);
+                };
                 img.src = ev.target.result;
-                preview.appendChild(img);
-                preview.dataset.imageData = ev.target.result;
-                const ph = document.createElement('div');
-                ph.className = 'upload-placeholder';
-                ph.textContent = '📷';
-                ph.onclick = () => document.getElementById('formImageInput').click();
-                preview.appendChild(ph);
             };
             reader.readAsDataURL(file);
+        }
+
+        function handleImages(e) {
+            const files = Array.from(e.target.files);
+            if (!files.length) return;
+            const preview = document.getElementById('formImagePreview');
+            let arr = JSON.parse(preview.dataset.images || '[]');
+            const remaining = 4 - arr.length;
+            if (remaining <= 0) {
+                alert('最多只能上传 4 张图片');
+                e.target.value = '';
+                return;
+            }
+            const toProcess = files.slice(0, remaining);
+            if (files.length > remaining) {
+                alert(`只能再传 ${remaining} 张，多余的已忽略`);
+            }
+            let processed = 0;
+            toProcess.forEach(file => {
+                compressImage(file, (dataUrl) => {
+                    arr.push(dataUrl);
+                    processed++;
+                    if (processed === toProcess.length) {
+                        preview.dataset.images = JSON.stringify(arr);
+                        // 重新渲染整个预览区
+                        preview.innerHTML = '';
+                        arr.forEach((src, i) => preview.appendChild(makeImgWrap(src, i)));
+                        const ph = document.createElement('div');
+                        ph.className = 'upload-placeholder';
+                        ph.textContent = '📷';
+                        ph.onclick = () => document.getElementById('formImageInput').click();
+                        preview.appendChild(ph);
+                    }
+                });
+            });
+            e.target.value = '';
         }
 
         function saveItem() {
@@ -672,7 +838,6 @@
             const category = document.getElementById('formCategory').value;
             const name = document.getElementById('formName').value.trim();
             if (!name) { alert('请填写名称'); return; }
-            const source = document.getElementById('formSource').value.trim();
             const location = document.getElementById('formLocation').value.trim();
             const price = parseFloat(document.getElementById('formPrice').value) || 0;
             const rating = parseInt(document.getElementById('formRating').value) || 0;
@@ -680,22 +845,31 @@
             const intention = document.getElementById('formIntention').value;
             const time = document.getElementById('formTime').value;
             const preview = document.getElementById('formImagePreview');
-            const image = preview.dataset.imageData || '';
+            let images = [];
+            try { images = JSON.parse(preview.dataset.images || '[]'); } catch(e) {}
+            // 兼容旧字段 image（单图）转 images
+            const imagesArr = images.filter(Boolean);
 
             if (id) {
                 const item = DATA.find(d => String(d.id) === String(id));
                 if (item) {
-                    item.category = category; item.name = name; item.source = source;
+                    // 权限检查：只有作者能编辑
+                    if (item.createdBy && item.createdBy !== getUserName()) {
+                        alert('只能编辑自己创建的卡片');
+                        return;
+                    }
+                    item.category = category; item.name = name;
                     item.location = location; item.price = price; item.rating = rating;
                     item.comment = comment; item.intention = intention; item.time = time;
-                    if (image) item.image = image;
+                    item.images = imagesArr;
+                    delete item.image;  // 清理旧字段
                     // 编辑保留原 createdBy / createdAt / voters
                 }
             } else {
                 DATA.push({
                     id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-                    category, name, source, location, price, rating, comment, intention, time,
-                    image: image,
+                    category, name, location, price, rating, comment, intention, time,
+                    images: imagesArr,
                     votes: 0,
                     voters: [],
                     createdBy: getUserName(),
@@ -726,13 +900,17 @@
                     const imported = JSON.parse(ev.target.result);
                     if (Array.isArray(imported)) {
                         if (!confirm(`导入 ${imported.length} 条数据？`)) return;
-                        DATA = imported.map(item => ({
-                            ...item,
-                            votes: item.votes || 0,
-                            voters: Array.isArray(item.voters) ? item.voters : [],
-                            createdBy: item.createdBy || '匿名',
-                            createdAt: item.createdAt || 0
-                        }));
+                        DATA = imported.map(item => {
+                            let images = Array.isArray(item.images) ? item.images : (item.image ? [item.image] : []);
+                            return {
+                                ...item,
+                                votes: item.votes || 0,
+                                voters: Array.isArray(item.voters) ? item.voters : [],
+                                createdBy: item.createdBy || '匿名',
+                                createdAt: item.createdAt || 0,
+                                images: images
+                            };
+                        });
                         saveData();
                         alert('导入成功！');
                     } else { alert('格式错误'); }
