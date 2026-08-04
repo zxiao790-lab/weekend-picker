@@ -119,6 +119,13 @@
         .form-group label { font-weight: 600; font-size: 13px; color: #334155; }
         .form-group input, .form-group select, .form-group textarea { padding: 8px 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; transition: 0.2s; background: #fafbfc; }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #3b82f6; outline: none; background: white; }
+        /* 固定/区间 切换 toggle */
+        .type-toggle { font-weight: 400; font-size: 11px; margin-left: 8px; color: #94a3b8; }
+        .type-toggle label { margin-right: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; }
+        .type-toggle input[type="radio"] { margin: 0; width: 12px; height: 12px; }
+        .price-input, .time-input { display: flex; align-items: center; gap: 6px; }
+        .price-input input, .time-input input { flex: 1; min-width: 0; }
+        .range-sep { color: #94a3b8; font-weight: 600; }
         .form-group textarea { min-height: 240px; width: 100%; resize: vertical; font-family: inherit; line-height: 1.6; padding: 12px; }
         .textarea-wrap { position: relative; width: 100%; }
         /* 全屏按钮放在输入框内右上角，半透明不挤压宽度 */
@@ -244,12 +251,38 @@
                 <input id="formLocation" placeholder="南山区万象天地L3" />
             </div>
             <div class="form-group">
-                <label>人均 (元)</label>
-                <input id="formPrice" type="number" placeholder="150" />
+                <label>
+                    人均 (元)
+                    <span class="type-toggle">
+                        <label><input type="radio" name="priceType" value="fixed" checked onchange="updatePriceUI()"> 固定</label>
+                        <label><input type="radio" name="priceType" value="range" onchange="updatePriceUI()"> 区间</label>
+                    </span>
+                </label>
+                <div id="priceFixed" class="price-input">
+                    <input id="formPrice" type="number" placeholder="150">
+                </div>
+                <div id="priceRange" class="price-input" style="display:none">
+                    <input id="formPriceMin" type="number" placeholder="100">
+                    <span class="range-sep">-</span>
+                    <input id="formPriceMax" type="number" placeholder="200">
+                </div>
             </div>
             <div class="form-group">
-                <label>时间</label>
-                <input id="formTime" type="datetime-local" />
+                <label>
+                    时间
+                    <span class="type-toggle">
+                        <label><input type="radio" name="timeType" value="fixed" checked onchange="updateTimeUI()"> 时间点</label>
+                        <label><input type="radio" name="timeType" value="range" onchange="updateTimeUI()"> 区间</label>
+                    </span>
+                </label>
+                <div id="timeFixed" class="time-input">
+                    <input id="formTime" type="datetime-local">
+                </div>
+                <div id="timeRange" class="time-input" style="display:none">
+                    <input id="formTimeStart" type="datetime-local">
+                    <span class="range-sep">-</span>
+                    <input id="formTimeEnd" type="datetime-local">
+                </div>
             </div>
             <div class="form-group">
                 <label>评分</label>
@@ -629,11 +662,11 @@
                             </div>
                             <div class="card-meta">
                                 <span>📍 ${escape(item.location || '未填')}</span>
-                                <span class="card-price">¥${item.price||0} <small>人均</small></span>
+                                <span class="card-price">${formatPrice(item)} <small>人均</small></span>
                             </div>
                             <div class="card-stars">${stars}</div>
                             <div class="card-meta" style="font-size:11px;flex-wrap:wrap;">
-                                ${item.time ? ` 🕐 ${escape(item.time.replace('T',' '))}` : ''}
+                                ${item.time ? ` 🕐 ${formatTime(item)}` : ''}
                                 <span class="tag ${intentCls}">${item.intention||'看你们'}</span>
                             </div>
                             <div class="card-author">by ${escape(item.createdBy || '匿名')} · ${item.createdAt ? new Date(item.createdAt).toLocaleString('zh-CN', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : ''}</div>
@@ -649,6 +682,24 @@
                 `;
             });
             container.innerHTML = html;
+        }
+
+        // 价格/时间格式化
+        function formatPrice(item) {
+            const p = item.price || 0;
+            if (item.priceType === 'range' || (item.priceMax && item.priceMax > 0)) {
+                return `¥${p}-${item.priceMax}`;
+            }
+            return `¥${p}`;
+        }
+        function formatTime(item) {
+            if (!item.time) return '';
+            const start = item.time.replace('T', ' ');
+            if (item.timeType === 'range' || (item.timeEnd && item.timeEnd.length > 0)) {
+                const end = item.timeEnd.replace('T', ' ');
+                return `${escape(start)} - ${escape(end)}`;
+            }
+            return escape(start);
         }
 
         // ========== 详情页 ==========
@@ -686,8 +737,8 @@
                     </div>
                     <div class="detail-meta">
                         <span>📍 ${escape(item.location || '未填')}</span>
-                        <span class="card-price">¥${item.price||0} <small>人均</small></span>
-                        ${item.time ? `<span> 🕐 ${escape(item.time.replace('T',' '))}</span>` : ''}
+                        <span class="card-price">${formatPrice(item)} <small>人均</small></span>
+                        ${item.time ? `<span> 🕐 ${formatTime(item)}</span>` : ''}
                         <span class="tag ${intentCls}">${item.intention||'看你们'}</span>
                     </div>
                     <div class="detail-stars">${stars}</div>
@@ -816,15 +867,37 @@
             document.getElementById('formPage').classList.remove('active');
         }
 
+        // 价格/时间类型切换 UI
+        function updatePriceUI() {
+            const isRange = document.querySelector('input[name="priceType"]:checked').value === 'range';
+            document.getElementById('priceFixed').style.display = isRange ? 'none' : 'flex';
+            document.getElementById('priceRange').style.display = isRange ? 'flex' : 'none';
+        }
+        function updateTimeUI() {
+            const isRange = document.querySelector('input[name="timeType"]:checked').value === 'range';
+            document.getElementById('timeFixed').style.display = isRange ? 'none' : 'flex';
+            document.getElementById('timeRange').style.display = isRange ? 'flex' : 'none';
+        }
+
         function openAddForm() {
-            showForm('✨ 添加新去处', '');
+            showForm('添加新去处', '');
             document.getElementById('formCategory').value = '餐厅';
             document.getElementById('formName').value = '';
             document.getElementById('formLocation').value = '';
+            // 价格：默认固定
+            document.querySelector('input[name="priceType"][value="fixed"]').checked = true;
             document.getElementById('formPrice').value = '';
+            document.getElementById('formPriceMin').value = '';
+            document.getElementById('formPriceMax').value = '';
+            updatePriceUI();
+            // 时间：默认时间点
+            document.querySelector('input[name="timeType"][value="fixed"]').checked = true;
+            document.getElementById('formTime').value = '';
+            document.getElementById('formTimeStart').value = '';
+            document.getElementById('formTimeEnd').value = '';
+            updateTimeUI();
             document.getElementById('formComment').value = '';
             document.getElementById('formIntention').value = '超想去';
-            document.getElementById('formTime').value = '';
             document.getElementById('formRating').value = 0;
             starValue = 0;
             updateStars();
@@ -845,10 +918,22 @@
             document.getElementById('formCategory').value = item.category || '餐厅';
             document.getElementById('formName').value = item.name || '';
             document.getElementById('formLocation').value = item.location || '';
+            // 价格：根据 priceMax 是否存在判断类型
+            const isPriceRange = item.priceType === 'range' || (item.priceMax && item.priceMax > 0);
+            document.querySelector(`input[name="priceType"][value="${isPriceRange ? 'range' : 'fixed'}"]`).checked = true;
             document.getElementById('formPrice').value = item.price || '';
+            document.getElementById('formPriceMin').value = isPriceRange ? (item.price || '') : '';
+            document.getElementById('formPriceMax').value = isPriceRange ? (item.priceMax || '') : '';
+            updatePriceUI();
+            // 时间：根据 timeEnd 是否存在判断类型
+            const isTimeRange = item.timeType === 'range' || (item.timeEnd && item.timeEnd.length > 0);
+            document.querySelector(`input[name="timeType"][value="${isTimeRange ? 'range' : 'fixed'}"]`).checked = true;
+            document.getElementById('formTime').value = item.time || '';
+            document.getElementById('formTimeStart').value = isTimeRange ? (item.time || '') : '';
+            document.getElementById('formTimeEnd').value = isTimeRange ? (item.timeEnd || '') : '';
+            updateTimeUI();
             document.getElementById('formComment').value = item.comment || '';
             document.getElementById('formIntention').value = item.intention || '看你们';
-            document.getElementById('formTime').value = item.time || '';
             starValue = item.rating || 0;
             document.getElementById('formRating').value = starValue;
             updateStars();
@@ -862,7 +947,7 @@
             });
             const ph = document.createElement('div');
             ph.className = 'upload-placeholder';
-            ph.textContent = '📷';
+            ph.textContent = '+';
             ph.onclick = () => document.getElementById('formImageInput').click();
             preview.appendChild(ph);
         }
@@ -977,43 +1062,73 @@
             const name = document.getElementById('formName').value.trim();
             if (!name) { alert('请填写名称'); return; }
             const location = document.getElementById('formLocation').value.trim();
-            const price = parseFloat(document.getElementById('formPrice').value) || 0;
             const rating = parseInt(document.getElementById('formRating').value) || 0;
             const comment = document.getElementById('formComment').value.trim();
             const intention = document.getElementById('formIntention').value;
-            const time = document.getElementById('formTime').value;
+
+            // 价格：根据 toggle 读取
+            const priceType = document.querySelector('input[name="priceType"]:checked').value;
+            let price = 0, priceMax = 0;
+            if (priceType === 'range') {
+                price = parseFloat(document.getElementById('formPriceMin').value) || 0;
+                priceMax = parseFloat(document.getElementById('formPriceMax').value) || 0;
+                if (priceMax < price) priceMax = price;  // 容错
+            } else {
+                price = parseFloat(document.getElementById('formPrice').value) || 0;
+            }
+
+            // 时间：根据 toggle 读取
+            const timeType = document.querySelector('input[name="timeType"]:checked').value;
+            let time = '', timeEnd = '';
+            if (timeType === 'range') {
+                time = document.getElementById('formTimeStart').value;
+                timeEnd = document.getElementById('formTimeEnd').value;
+            } else {
+                time = document.getElementById('formTime').value;
+            }
+
             const preview = document.getElementById('formImagePreview');
             let images = [];
             try { images = JSON.parse(preview.dataset.images || '[]'); } catch(e) {}
-            // 兼容旧字段 image（单图）转 images
             const imagesArr = images.filter(Boolean);
 
             if (id) {
                 const item = DATA.find(d => String(d.id) === String(id));
                 if (item) {
-                    // 权限检查：只有作者能编辑
                     if (item.createdBy && item.createdBy !== getUserName()) {
                         alert('只能编辑自己创建的卡片');
                         return;
                     }
                     item.category = category; item.name = name;
-                    item.location = location; item.price = price; item.rating = rating;
-                    item.comment = comment; item.intention = intention; item.time = time;
+                    item.location = location;
+                    item.priceType = priceType; item.price = price;
+                    if (priceType === 'range') item.priceMax = priceMax;
+                    else delete item.priceMax;
+                    item.timeType = timeType; item.time = time;
+                    if (timeType === 'range') item.timeEnd = timeEnd;
+                    else delete item.timeEnd;
+                    item.rating = rating;
+                    item.comment = comment; item.intention = intention;
                     item.images = imagesArr;
-                    delete item.image;  // 清理旧字段
-                    item.updatedAt = Date.now();  // 标记更新时间，用于合并时判断较新版本
-                    // 编辑保留原 createdBy / createdAt / voters
+                    delete item.image;
+                    item.updatedAt = Date.now();
                 }
             } else {
                 const now = Date.now();
-                DATA.push({
+                const newItem = {
                     id: now + '_' + Math.random().toString(36).substr(2, 6),
-                    category, name, location, price, rating, comment, intention, time,
+                    category, name, location,
+                    priceType, price,
+                    timeType, time,
+                    rating, comment, intention,
                     images: imagesArr,
                     createdBy: getUserName(),
                     createdAt: now,
                     updatedAt: now
-                });
+                };
+                if (priceType === 'range') newItem.priceMax = priceMax;
+                if (timeType === 'range') newItem.timeEnd = timeEnd;
+                DATA.push(newItem);
             }
             saveData();
             closeForm();
