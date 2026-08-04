@@ -29,6 +29,21 @@
         .stat-card { background: white; border-radius: 12px; padding: 12px 14px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
         .stat-card .number { font-size: 24px; font-weight: 700; }
         .stat-card .label { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+        .stat-card.top-rank { grid-column: span 2; text-align: left; background: linear-gradient(135deg, #fff7ed, #fef3c7); border: 1px solid #fde68a; }
+        .stat-card.top-rank .label { color: #92400e; margin-bottom: 6px; font-size: 13px; }
+        .top-list { display: flex; flex-direction: column; gap: 6px; }
+        .top-row { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #1e293b; }
+        .top-row .rank { font-size: 16px; min-width: 22px; }
+        .top-row .rank-1 { color: #f59e0b; }
+        .top-row .rank-2 { color: #94a3b8; }
+        .top-row .rank-3 { color: #b45309; }
+        .top-row .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .top-row .votes { color: #dc2626; font-weight: 700; }
+        .top-row.empty { color: #94a3b8; font-weight: 400; font-size: 12px; }
+
+        .user-input { padding: 6px 12px; border-radius: 20px; border: 1.5px solid #e2e8f0; font-size: 13px; outline: none; background: white; width: 110px; transition: border 0.2s; }
+        .user-input:focus { border-color: #3b82f6; }
+        .user-input-label { font-size: 11px; color: #94a3b8; margin-right: 4px; }
         
         .filters { display: flex; gap: 8px; flex-wrap: wrap; background: white; padding: 10px 14px; border-radius: 12px; margin-bottom: 16px; align-items: center; }
         .filters select, .filters input { padding: 6px 12px; border-radius: 20px; border: 1.5px solid #e2e8f0; font-size: 13px; outline: none; background: white; }
@@ -61,9 +76,11 @@
         .card-stars span { color: #cbd5e1; }
         .card-stars span.active { color: #facc15; }
         .card-comment { font-size: 13px; color: #475569; background: #f8fafc; padding: 6px 10px; border-radius: 8px; line-height: 1.4; }
+        .card-author { font-size: 11px; color: #94a3b8; margin-top: 4px; }
         .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; border-top: 1px solid #f1f5f9; padding-top: 10px; }
         .vote-btn { background: #f1f5f9; border: none; padding: 2px 12px; border-radius: 20px; font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600; }
         .vote-btn:hover { background: #e2e8f0; }
+        .vote-btn.voted { background: #dcfce7; color: #166534; }
         .card-actions { display: flex; gap: 2px; }
         .card-actions button { background: transparent; border: none; padding: 4px 6px; border-radius: 6px; cursor: pointer; font-size: 14px; color: #94a3b8; transition: 0.2s; }
         .card-actions button:hover { background: #f1f5f9; color: #1e293b; }
@@ -110,6 +127,8 @@
         <h1>🗺️ 周末去哪儿</h1>
         <div class="header-actions">
             <span id="wsStatus" class="ws-status offline">● 协作离线</span>
+            <span class="user-input-label">我是</span>
+            <input id="userName" class="user-input" type="text" maxlength="12" placeholder="取个名字" onchange="saveUserName(this.value)" />
             <button class="btn btn-primary" onclick="openAddForm()">➕ 添加</button>
             <button class="btn btn-success" onclick="exportData()">📤 导出</button>
             <button class="btn btn-outline" onclick="document.getElementById('importFile').click()">📥 导入</button>
@@ -121,6 +140,12 @@
         <div class="stat-card"><div class="number" id="totalCount">0</div><div class="label">📋 总提案</div></div>
         <div class="stat-card"><div class="number" id="avgPrice">0</div><div class="label">💰 平均消费</div></div>
         <div class="stat-card"><div class="number" id="topVote">0</div><div class="label">👍 最高票数</div></div>
+        <div class="stat-card top-rank" id="topRankCard">
+            <div class="label">🏆 当前领先</div>
+            <div class="top-list" id="topList">
+                <div class="top-row empty">还没有人投票，加一条试试</div>
+            </div>
+        </div>
     </div>
 
     <div class="filters hide-when-form" id="filtersArea">
@@ -235,7 +260,37 @@
         //    isApplyingRemote 锁防止"接收广播→写 localStorage→又触发广播"的死循环
         let DATA = [];
         const KEY = 'weekend_data';
+        const USER_KEY = 'weekend_user_name';
         let starValue = 0;
+
+        // ========== 用户身份 ==========
+        const ADJ = ['轻快','活泼','安静','好奇','温柔','悠闲','勇敢','可爱','自在','机灵','温暖','灵巧'];
+        const NOUN = ['海豚','狐狸','猫咪','松鼠','考拉','燕子','月亮','蘑菇','海鸥','小鹿','浣熊','水母'];
+
+        function getUserName() {
+            let name = localStorage.getItem(USER_KEY);
+            if (!name) {
+                name = ADJ[Math.floor(Math.random()*ADJ.length)] + NOUN[Math.floor(Math.random()*NOUN.length)];
+                localStorage.setItem(USER_KEY, name);
+            }
+            return name;
+        }
+
+        function saveUserName(name) {
+            name = (name || '').trim();
+            if (!name) {
+                name = ADJ[Math.floor(Math.random()*ADJ.length)] + NOUN[Math.floor(Math.random()*NOUN.length)];
+            }
+            localStorage.setItem(USER_KEY, name);
+            // 改名只更新 UI 显示，不影响已存在的卡片作者（保留历史）
+            const input = document.getElementById('userName');
+            if (input) input.value = name;
+        }
+
+        function initUserNameInput() {
+            const input = document.getElementById('userName');
+            if (input) input.value = getUserName();
+        }
 
         // ========== WebSocket 协作 ==========
         let WS = null;
@@ -315,7 +370,13 @@
             }
             // 不再生成种子数据：协作场景下 A、B 各自生成种子会冲突，
             // 不如空状态提示用户"点击添加"
-            DATA = DATA.map(item => ({ ...item, votes: item.votes || 0 }));
+            DATA = DATA.map(item => ({
+                ...item,
+                votes: item.votes || 0,
+                voters: Array.isArray(item.voters) ? item.voters : [],
+                createdBy: item.createdBy || '匿名',
+                createdAt: item.createdAt || 0
+            }));
             saveData();
         }
 
@@ -338,12 +399,39 @@
                 return true;
             });
 
+            // 按票数降序，同票时按创建时间升序（早加的排前面）
+            filtered.sort((a, b) => {
+                const diff = (b.votes || 0) - (a.votes || 0);
+                if (diff !== 0) return diff;
+                return (a.createdAt || 0) - (b.createdAt || 0);
+            });
+
             document.getElementById('totalCount').textContent = DATA.length;
             const prices = DATA.map(i => Number(i.price) || 0).filter(p => p > 0);
             const avg = prices.length ? (prices.reduce((a,b)=>a+b,0) / prices.length).toFixed(0) : 0;
             document.getElementById('avgPrice').textContent = avg ? '¥'+avg : '0';
             const top = DATA.reduce((max, i) => Math.max(max, i.votes || 0), 0);
             document.getElementById('topVote').textContent = top;
+
+            // Top 3 排行榜（全量，不受筛选影响）
+            const topList = document.getElementById('topList');
+            const ranked = [...DATA].filter(i => (i.votes || 0) > 0).sort((a, b) => {
+                const diff = (b.votes || 0) - (a.votes || 0);
+                if (diff !== 0) return diff;
+                return (a.createdAt || 0) - (b.createdAt || 0);
+            }).slice(0, 3);
+            if (ranked.length === 0) {
+                topList.innerHTML = '<div class="top-row empty">还没有人投票，加一条试试</div>';
+            } else {
+                const medals = ['🥇','🥈','🥉'];
+                topList.innerHTML = ranked.map((it, idx) => `
+                    <div class="top-row">
+                        <span class="rank rank-${idx+1}">${medals[idx]}</span>
+                        <span class="name">${escape(it.name)}</span>
+                        <span class="votes">${it.votes}票</span>
+                    </div>
+                `).join('');
+            }
 
             const container = document.getElementById('gridContainer');
             if (filtered.length === 0) {
@@ -382,8 +470,9 @@
                                 ${item.time ? ` 🕐 ${escape(item.time.replace('T',' '))}` : ''}
                                 <span class="tag ${intentCls}">${item.intention||'看你们'}</span>
                             </div>
+                            <div class="card-author">by ${escape(item.createdBy || '匿名')} · ${item.createdAt ? new Date(item.createdAt).toLocaleString('zh-CN', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : ''}</div>
                             <div class="card-footer">
-                                <button class="vote-btn" onclick="vote('${safeId}')">👍 <span id="v-${safeId}">${item.votes||0}</span></button>
+                                <button class="vote-btn ${hasVoted(item) ? 'voted' : ''}" onclick="vote('${safeId}')">${hasVoted(item) ? '✅' : '👍'} <span id="v-${safeId}">${item.votes||0}</span></button>
                                 <div class="card-actions">
                                     <button onclick="openEditForm('${safeId}')">✏️</button>
                                     <button class="del" onclick="deleteItem('${safeId}')">🗑️</button>
@@ -407,8 +496,21 @@
         function vote(id) {
             const item = DATA.find(d => String(d.id) === String(id));
             if (!item) return;
-            item.votes = (item.votes || 0) + 1;
+            if (!Array.isArray(item.voters)) item.voters = [];
+            const user = getUserName();
+            if (item.voters.includes(user)) {
+                // 已投过：再点一次 = 撤回投票
+                item.voters = item.voters.filter(u => u !== user);
+            } else {
+                item.voters.push(user);
+            }
+            item.votes = item.voters.length;
             saveData();
+        }
+
+        function hasVoted(item) {
+            const user = getUserName();
+            return Array.isArray(item.voters) && item.voters.includes(user);
         }
 
         // ========== 删除 ==========
@@ -562,12 +664,17 @@
                     item.location = location; item.price = price; item.rating = rating;
                     item.comment = comment; item.intention = intention; item.time = time;
                     if (image) item.image = image;
+                    // 编辑保留原 createdBy / createdAt / voters
                 }
             } else {
                 DATA.push({
                     id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
                     category, name, source, location, price, rating, comment, intention, time,
-                    image: image, votes: 0
+                    image: image,
+                    votes: 0,
+                    voters: [],
+                    createdBy: getUserName(),
+                    createdAt: Date.now()
                 });
             }
             saveData();
@@ -594,7 +701,13 @@
                     const imported = JSON.parse(ev.target.result);
                     if (Array.isArray(imported)) {
                         if (!confirm(`导入 ${imported.length} 条数据？`)) return;
-                        DATA = imported.map(item => ({ ...item, votes: item.votes || 0 }));
+                        DATA = imported.map(item => ({
+                            ...item,
+                            votes: item.votes || 0,
+                            voters: Array.isArray(item.voters) ? item.voters : [],
+                            createdBy: item.createdBy || '匿名',
+                            createdAt: item.createdAt || 0
+                        }));
                         saveData();
                         alert('导入成功！');
                     } else { alert('格式错误'); }
@@ -605,6 +718,7 @@
         }
 
         // ========== 启动 ==========
+        initUserNameInput();
         loadData();
         render();
         connectWS();
