@@ -311,20 +311,38 @@
             WS.onopen = () => {
                 updateWSStatus(true);
                 console.log('🟢 协作已连接');
-                // 连上后先广播一次本地数据，让其他人能看到
-                broadcastData();
+                // 不广播自己的数据（避免空数据覆盖别人）
+                // 只发 hello 信号，让有数据的客户端回应我
+                if (WS.readyState === WebSocket.OPEN) {
+                    WS.send(JSON.stringify({ type: 'hello' }));
+                }
             };
 
             WS.onmessage = (event) => {
                 try {
-                    const remote = JSON.parse(event.data);
-                    if (!Array.isArray(remote)) return;
-                    // 后到覆盖先到：直接替换本地 DATA
-                    isApplyingRemote = true;
-                    DATA = remote.map(item => ({ ...item, votes: item.votes || 0 }));
-                    localStorage.setItem(KEY, JSON.stringify(DATA));
-                    render();
-                    isApplyingRemote = false;
+                    const msg = JSON.parse(event.data);
+                    // hello 信号：有新客户端连上，回应自己的数据（只在有数据时回应）
+                    if (msg && typeof msg === 'object' && msg.type === 'hello') {
+                        if (DATA.length > 0) {
+                            broadcastData(false);  // 非强制，避免空客户端也回应
+                        }
+                        return;
+                    }
+                    // 数据消息：数组
+                    if (Array.isArray(msg)) {
+                        // 后到覆盖先到：直接替换本地 DATA
+                        isApplyingRemote = true;
+                        DATA = msg.map(item => ({
+                            ...item,
+                            votes: item.votes || 0,
+                            voters: Array.isArray(item.voters) ? item.voters : [],
+                            createdBy: item.createdBy || '匿名',
+                            createdAt: item.createdAt || 0
+                        }));
+                        localStorage.setItem(KEY, JSON.stringify(DATA));
+                        render();
+                        isApplyingRemote = false;
+                    }
                 } catch (e) {
                     console.error('解析远端数据失败:', e);
                 }
@@ -345,9 +363,13 @@
             wsRetryTimer = setTimeout(connectWS, 5000);
         }
 
-        function broadcastData() {
+        // force=true  → 用户操作触发，DATA 即使为空也广播（删最后一条要同步给所有人）
+        // force=false → 默认，只在 DATA 非空时广播（避免首次打开空数据覆盖别人）
+        function broadcastData(force = true) {
             if (WS && WS.readyState === WebSocket.OPEN && !isApplyingRemote) {
-                WS.send(JSON.stringify(DATA));
+                if (force || DATA.length > 0) {
+                    WS.send(JSON.stringify(DATA));
+                }
             }
         }
 
@@ -377,12 +399,15 @@
                 createdBy: item.createdBy || '匿名',
                 createdAt: item.createdAt || 0
             }));
-            saveData();
+            // 不调 saveData（避免首次打开空数据强制广播覆盖别人）
+            localStorage.setItem(KEY, JSON.stringify(DATA));
+            broadcastData(false);  // 只在有数据时广播
+            render();
         }
 
         function saveData() {
             localStorage.setItem(KEY, JSON.stringify(DATA));
-            broadcastData();
+            broadcastData(true);  // 用户操作触发，强制广播（即使空也要同步删除）
             render();
         }
 
