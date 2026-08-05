@@ -1,0 +1,1807 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>周末去哪儿</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; }
+        body { background: #f5f7fb; padding: 16px; max-width: 1400px; margin: 0 auto; color: #1e293b; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; background: white; padding: 16px 20px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 20px; }
+        .header h1 { font-size: 22px; font-weight: 700; background: linear-gradient(135deg, #f97316, #ef4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .ws-status { font-size: 12px; padding: 4px 10px; border-radius: 20px; background: #f1f5f9; color: #64748b; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+        .ws-status.online { background: #dcfce7; color: #166534; }
+        .ws-status.offline { background: #fef3c7; color: #92400e; }
+        
+        .btn { padding: 8px 16px; border-radius: 24px; border: none; font-weight: 600; font-size: 13px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 4px; }
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-success { background: #22c55e; color: white; }
+        .btn-success:hover { background: #16a34a; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-outline { background: #f1f5f9; color: #1e293b; }
+        .btn-outline:hover { background: #e2e8f0; }
+        
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 16px; }
+        .stat-card { background: white; border-radius: 12px; padding: 12px 14px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
+        .stat-card .number { font-size: 24px; font-weight: 700; }
+        .stat-card .label { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+
+        .user-input { padding: 6px 12px; border-radius: 20px; border: 1.5px solid #e2e8f0; font-size: 13px; outline: none; background: white; width: 110px; transition: border 0.2s; }
+        .user-input:focus { border-color: #3b82f6; }
+        .user-input-label { font-size: 11px; color: #94a3b8; margin-right: 4px; }
+        
+        .filters { display: flex; gap: 8px; flex-wrap: wrap; background: white; padding: 10px 14px; border-radius: 12px; margin-bottom: 16px; align-items: center; }
+        .filters select, .filters input { padding: 6px 12px; border-radius: 20px; border: 1.5px solid #e2e8f0; font-size: 13px; outline: none; background: white; }
+        .filters select:focus, .filters input:focus { border-color: #3b82f6; }
+        .result-count { font-size: 12px; color: #94a3b8; padding: 0 4px 10px; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+        
+        .card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.06); transition: 0.2s; display: flex; flex-direction: column; cursor: pointer; height: 320px; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
+        .card-img { width: 100%; height: 140px; background: #eef2f6; display: flex; align-items: center; justify-content: center; font-size: 40px; color: #94a3b8; border-bottom: 1px solid #f1f5f9; position: relative; flex-shrink: 0; }
+        .card-img img { width: 100%; height: 100%; object-fit: cover; }
+        .card-img .img-count { position: absolute; right: 8px; bottom: 8px; background: rgba(0,0,0,0.6); color: white; font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+        /* 分类标签叠在图片左上角 */
+        .card-tag-overlay { position: absolute; top: 10px; left: 10px; background: rgba(255,255,255,0.95); backdrop-filter: blur(4px); padding: 3px 10px; border-radius: 14px; font-size: 11px; font-weight: 600; box-shadow: 0 2px 6px rgba(0,0,0,0.15); z-index: 1; }
+        .card-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; flex: 1; min-height: 0; }
+        /* 标题、地址单行截断 */
+        .card-name-row { font-size: 16px; font-weight: 700; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-location-row { font-size: 12px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-price-row { font-size: 15px; font-weight: 700; color: #1e293b; }
+        .card-price-row small { font-weight: 400; font-size: 11px; color: #94a3b8; }
+        .card-stars { display: flex; gap: 2px; font-size: 16px; }
+        .card-stars span { color: #cbd5e1; }
+        .card-stars span.active { color: #facc15; }
+        .card-comment { font-size: 13px; color: #475569; background: #f8fafc; padding: 6px 10px; border-radius: 8px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .card-author { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+        .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; border-top: 1px solid #f1f5f9; padding-top: 8px; }
+        .vote-btn { background: #f1f5f9; border: none; padding: 2px 12px; border-radius: 20px; font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600; }
+        .vote-btn:hover { background: #e2e8f0; }
+        .vote-btn.voted { background: #dcfce7; color: #166534; }
+        .card-actions { display: flex; gap: 2px; }
+        .card-actions button { background: transparent; border: none; padding: 4px 6px; border-radius: 6px; cursor: pointer; font-size: 14px; color: #94a3b8; transition: 0.2s; }
+        .card-actions button:hover { background: #f1f5f9; color: #1e293b; }
+        .card-actions .del:hover { color: #ef4444; background: #fee2e2; }
+        .empty { text-align: center; padding: 40px 20px; color: #94a3b8; font-size: 16px; grid-column: 1 / -1; }
+        /* tag 样式（详情页和卡片标签叠层共用） */
+        .tag { padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .tag-orange { background: #ffedd5; color: #c2410c; }
+        .tag-purple { background: #f3e8ff; color: #6b21a8; }
+        .tag-pink { background: #fce7f3; color: #9d174d; }
+        .tag-green { background: #dcfce7; color: #166534; }
+        .tag-gray { background: #f1f5f9; color: #475569; }
+        .tag-super { background: #fef2f2; color: #dc2626; }
+        .tag-good { background: #ecfdf5; color: #059669; }
+        .tag-soso { background: #fffbeb; color: #d97706; }
+        .tag-meh { background: #f3f4f6; color: #6b7280; }
+        .tag-up2u { background: #eff6ff; color: #2563eb; }
+
+        /* 详情页（全屏覆盖，不是弹窗） */
+        .detail-page { display: none; position: fixed; inset: 0; background: #f5f7fb; z-index: 100; overflow-y: auto; padding: 16px; }
+        .detail-page.active { display: block; }
+        .detail-back { position: sticky; top: 0; background: #f5f7fb; z-index: 10; padding: 8px 0 12px; }
+        .detail-back button { background: white; border: none; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; color: #1e293b; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+        .detail-back button:hover { background: #f1f5f9; }
+        .detail-card { background: white; border-radius: 20px; max-width: 800px; margin: 0 auto; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+        .detail-img-cover { width: 100%; height: 280px; background: #eef2f6; display: flex; align-items: center; justify-content: center; font-size: 60px; color: #cbd5e1; }
+        .detail-img-cover img { width: 100%; height: 100%; object-fit: cover; }
+        .detail-body { padding: 20px 24px 24px; }
+        .detail-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .detail-meta { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 14px; color: #64748b; margin-bottom: 14px; }
+        .detail-stars { display: flex; gap: 2px; font-size: 22px; margin: 8px 0; }
+        .detail-stars span { color: #cbd5e1; }
+        .detail-stars span.active { color: #facc15; }
+        .detail-comment { font-size: 15px; color: #1e293b; background: #f8fafc; padding: 14px 16px; border-radius: 10px; line-height: 1.6; margin: 14px 0; white-space: pre-wrap; word-break: break-word; }
+        .detail-img-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0; }
+        .detail-img-thumb { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; cursor: pointer; transition: 0.2s; background: #eef2f6; }
+        .detail-img-thumb:hover { opacity: 0.85; transform: scale(1.02); }
+        .detail-img-empty-thumb { width: 100%; aspect-ratio: 1; border-radius: 10px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #cbd5e1; }
+        .detail-author { font-size: 13px; color: #94a3b8; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9; }
+        .detail-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+        
+        /* 大图查看器 */
+        .img-viewer { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 200; align-items: center; justify-content: center; cursor: zoom-out; padding: 20px; }
+        .img-viewer.active { display: flex; }
+        .img-viewer img { max-width: 85vw; max-height: 85vh; object-fit: contain; border-radius: 4px; }
+        .img-viewer .close-btn { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.15); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 22px; cursor: pointer; z-index: 2; }
+        .img-viewer .close-btn:hover { background: rgba(255,255,255,0.3); }
+        .img-viewer .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.15); color: white; border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 32px; cursor: pointer; z-index: 2; display: flex; align-items: center; justify-content: center; line-height: 1; }
+        .img-viewer .nav-btn:hover { background: rgba(255,255,255,0.3); }
+        .img-viewer .nav-btn.prev { left: 16px; }
+        .img-viewer .nav-btn.next { right: 16px; }
+        .img-viewer .viewer-counter { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); color: white; font-size: 13px; background: rgba(0,0,0,0.5); padding: 4px 14px; border-radius: 12px; }
+        /* 移动端：隐藏左右按钮，用滑动切换 */
+        @media (max-width: 640px) {
+            .img-viewer { padding: 0; }
+            .img-viewer img { max-width: 100vw; max-height: 100vh; }
+            .img-viewer .nav-btn { display: none; }
+            .img-viewer .viewer-counter { bottom: 40px; }
+        }
+
+        /* 说明按钮 */
+        .help-btn { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid #cbd5e1; background: white; color: #475569; font-size: 15px; font-weight: 700; cursor: pointer; padding: 0; line-height: 1; }
+        .help-btn:hover { border-color: #3b82f6; color: #3b82f6; }
+
+        /* header 三按钮一行 */
+        .header-btns { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .btn-add-big { background: white; color: #3b82f6; border: 1.5px solid #3b82f6; padding: 10px 24px; border-radius: 24px; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-add-big:hover { background: #3b82f6; color: white; }
+        .btn-settings { background: white; color: #475569; border: 1.5px solid #cbd5e1; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-settings:hover { border-color: #3b82f6; color: #3b82f6; }
+
+        /* 设置弹窗内分节样式 */
+        .settings-section { margin: 16px 0; }
+        .settings-label { font-size: 12px; color: #94a3b8; font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .settings-display { font-size: 18px; font-weight: 700; color: #1e293b; padding: 10px 14px; background: #f8fafc; border-radius: 10px; }
+        .settings-hint { font-size: 12px; color: #94a3b8; margin-top: 6px; line-height: 1.5; }
+        .settings-divider { height: 1px; background: #f1f5f9; margin: 20px 0; }
+        .settings-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .settings-row .btn { flex: 1; min-width: 120px; justify-content: center; }
+
+        /* 说明弹窗 */
+        .help-modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.6); z-index: 250; padding: 16px; overflow-y: auto; }
+        .help-modal.active { display: block; }
+        .help-card { background: white; border-radius: 16px; max-width: 600px; margin: 20px auto; padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .help-card h2 { font-size: 20px; margin-bottom: 16px; }
+        .help-card h3 { font-size: 15px; color: #1e293b; margin: 18px 0 8px; }
+        .help-card p, .help-card li { font-size: 14px; color: #475569; line-height: 1.7; }
+        .help-card ul { padding-left: 20px; margin: 8px 0; }
+        .help-card .close-row { text-align: right; margin-top: 20px; }
+
+        /* 移动端底部弹窗 picker */
+        .picker-trigger { display: none; padding: 8px 14px; border-radius: 20px; border: 1.5px solid #e2e8f0; background: white; font-size: 13px; cursor: pointer; color: #1e293b; align-items: center; gap: 6px; }
+        .picker-trigger .arrow { color: #94a3b8; font-size: 11px; margin-left: auto; }
+        .picker-trigger:hover { border-color: #3b82f6; }
+        @media (max-width: 640px) {
+            .filters select { display: none; }
+            .picker-trigger { display: inline-flex; }
+            .form-group .form-select-trigger { display: flex; }
+        }
+        .form-group .form-select-trigger { display: none; padding: 8px 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; background: #fafbfc; font-size: 14px; cursor: pointer; align-items: center; gap: 6px; justify-content: space-between; }
+        .form-group .form-select-trigger .arrow { color: #94a3b8; }
+        .form-group .form-select-trigger:hover { border-color: #3b82f6; }
+
+        .bottom-picker { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 280; }
+        .bottom-picker.active { display: block; }
+        .bottom-picker-sheet { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-radius: 16px 16px 0 0; max-height: 70vh; overflow-y: auto; transform: translateY(100%); transition: transform 0.25s ease; padding-bottom: env(safe-area-inset-bottom, 0); }
+        .bottom-picker.active .bottom-picker-sheet { transform: translateY(0); }
+        .bottom-picker-header { padding: 14px 16px 8px; text-align: center; border-bottom: 1px solid #f1f5f9; position: sticky; top: 0; background: white; border-radius: 16px 16px 0 0; }
+        .bottom-picker-grab { width: 36px; height: 4px; background: #cbd5e1; border-radius: 2px; margin: 0 auto 8px; }
+        .bottom-picker-title { font-size: 14px; color: #94a3b8; font-weight: 600; }
+        .bottom-picker-close { position: absolute; top: 14px; right: 16px; background: transparent; border: none; font-size: 18px; color: #94a3b8; cursor: pointer; }
+        .bottom-picker-option { padding: 14px 20px; font-size: 15px; color: #1e293b; cursor: pointer; border-bottom: 1px solid #f8fafc; display: flex; align-items: center; justify-content: space-between; }
+        .bottom-picker-option:hover { background: #f8fafc; }
+        .bottom-picker-option.selected { background: #fff7ed; color: #c2410c; font-weight: 600; }
+        .bottom-picker-option .check { color: #3b82f6; font-size: 16px; }
+        .bottom-picker-option.add-new { color: #3b82f6; font-weight: 600; border-top: 1px solid #f1f5f9; }
+        @media (min-width: 641px) {
+            .bottom-picker-sheet { max-width: 480px; left: 50%; right: auto; transform: translateX(-50%) translateY(100%); border-radius: 16px; }
+            .bottom-picker.active .bottom-picker-sheet { transform: translateX(-50%) translateY(-50%); top: 50%; bottom: auto; max-height: 60vh; }
+        }
+        
+        /* 表单页面 */
+        .form-page { display: none; background: white; border-radius: 20px; padding: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+        .form-page.active { display: block; }
+        .form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; }
+        .form-header h2 { font-size: 20px; font-weight: 700; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 24px; }
+        .form-group { display: flex; flex-direction: column; gap: 3px; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-group label { font-weight: 600; font-size: 13px; color: #334155; }
+        .form-group input, .form-group select, .form-group textarea { padding: 8px 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; transition: 0.2s; background: #fafbfc; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #3b82f6; outline: none; background: white; }
+        /* 固定/区间 切换 toggle */
+        .type-toggle { font-weight: 400; font-size: 11px; margin-left: 8px; color: #94a3b8; }
+        .type-toggle label { margin-right: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; }
+        .type-toggle input[type="radio"] { margin: 0; width: 12px; height: 12px; }
+        .price-input, .time-input { display: flex; align-items: center; gap: 6px; }
+        .price-input input, .time-input input { flex: 1; min-width: 0; }
+        .range-sep { color: #94a3b8; font-weight: 600; }
+        .form-group textarea { min-height: 240px; width: 100%; resize: vertical; font-family: inherit; line-height: 1.6; padding: 12px; }
+        .textarea-wrap { position: relative; width: 100%; }
+        /* 全屏按钮放在输入框内右上角，半透明不挤压宽度 */
+        .textarea-wrap .fullscreen-btn { position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.85); border: 1px solid #e2e8f0; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; z-index: 1; color: #475569; backdrop-filter: blur(4px); }
+        .textarea-wrap .fullscreen-btn:hover { background: white; border-color: #3b82f6; color: #3b82f6; }
+        /* 锐评全屏输入（参考微信读书样式：顶部工具栏 + 大输入区） */
+        .comment-fullscreen { display: none; position: fixed; inset: 0; z-index: 300; background: white; flex-direction: column; }
+        .comment-fullscreen.active { display: flex; }
+        .comment-fs-toolbar { padding: 12px 16px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .comment-fs-title { font-weight: 600; font-size: 16px; color: #1e293b; }
+        .comment-fs-toolbar button { background: #3b82f6; color: white; border: none; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .comment-fs-toolbar button:hover { background: #2563eb; }
+        #commentFsInput { flex: 1; width: 100%; border: none; border-radius: 0; padding: 20px; font-size: 16px; line-height: 1.8; font-family: inherit; outline: none; resize: none; min-height: 0; }
+        .form-group .star-selector { display: flex; gap: 4px; font-size: 28px; cursor: pointer; }
+        .form-group .star-selector span { color: #cbd5e1; }
+        .form-group .star-selector span.active { color: #facc15; }
+        .form-group .upload-area { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .form-group .upload-area img { width: 80px; height: 80px; object-fit: cover; border-radius: 12px; border: 1.5px solid #e2e8f0; }
+        .form-group .upload-area .img-wrap { position: relative; }
+        .form-group .upload-area .img-remove { position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; background: #ef4444; color: white; border-radius: 50%; border: none; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .form-group .upload-placeholder { width: 80px; height: 80px; border-radius: 12px; border: 2px dashed #d1d5db; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #94a3b8; cursor: pointer; background: #fafbfc; }
+        .form-group .upload-placeholder:hover { border-color: #3b82f6; }
+        .form-page .btn-row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 2px solid #f1f5f9; }
+        
+        .hide-when-form { transition: opacity 0.2s; }
+        .hide-when-form.hidden { display: none; }
+        
+        @media (max-width: 640px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .header { flex-direction: column; align-items: stretch; }
+            .header-actions { justify-content: stretch; }
+            .header-actions .btn { flex: 1; justify-content: center; }
+            .grid { grid-template-columns: 1fr; }
+            .stats { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header hide-when-form" id="headerArea">
+        <h1>🗺️ 周末去哪儿</h1>
+        <div class="header-actions">
+            <span id="wsStatus" class="ws-status offline" onclick="manualReconnect()" title="点击强制重连" style="cursor:pointer">● 协作离线</span>
+            <div class="header-btns">
+                <button class="btn-add-big" onclick="openAddForm()">添加项目</button>
+                <button class="btn-settings" onclick="openSettingsModal()">设置</button>
+                <button class="help-btn" onclick="openHelpModal()" title="协作说明">?</button>
+            </div>
+            <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)" />
+        </div>
+    </div>
+
+    <div class="filters hide-when-form" id="filtersArea">
+        <select id="filterCategory" onchange="render()"></select>
+        <button class="picker-trigger" id="filterCategoryTrigger" onclick="openFilterPicker('category')">
+            <span id="filterCategoryLabel">全部分类</span><span class="arrow">▾</span>
+        </button>
+        <select id="filterIntention" onchange="render()">
+            <option value="all">全部意向</option>
+            <option value="超想去">超想去</option>
+            <option value="有点吸引我">有点吸引我</option>
+            <option value="好像还行">好像还行</option>
+            <option value="一般般">一般般</option>
+            <option value="看你们">看你们</option>
+        </select>
+        <button class="picker-trigger" id="filterIntentionTrigger" onclick="openFilterPicker('intention')">
+            <span id="filterIntentionLabel">全部意向</span><span class="arrow">▾</span>
+        </button>
+        <input type="text" id="filterKeyword" placeholder="🔍 搜索名称..." oninput="render()" style="flex:1;min-width:140px" />
+    </div>
+    <div class="result-count hide-when-form" id="resultCount">📋 共 0 条</div>
+
+    <div class="grid hide-when-form" id="gridContainer"></div>
+
+    <!-- 详情页（全屏覆盖） -->
+    <div class="detail-page" id="detailPage">
+        <div class="detail-back"><button onclick="closeDetail()">← 返回</button></div>
+        <div class="detail-card" id="detailCard"></div>
+    </div>
+
+    <!-- 大图查看器（桌面端左右按钮、移动端滑动切换） -->
+    <div class="img-viewer" id="imgViewer">
+        <button class="close-btn" onclick="closeImageViewer()">×</button>
+        <button class="nav-btn prev" onclick="viewerPrev(); event.stopPropagation()">‹</button>
+        <img id="imgViewerImg" src="" alt="" />
+        <button class="nav-btn next" onclick="viewerNext(); event.stopPropagation()">›</button>
+        <div class="viewer-counter" id="viewerCounter"></div>
+    </div>
+
+    <!-- 协作说明弹窗 -->
+    <div class="help-modal" id="helpModal" onclick="if(event.target===this)closeHelpModal()">
+        <div class="help-card">
+            <h2>📋 协作原理说明</h2>
+            <p>这个网页的协作通过 WebSocket 实时同步。数据存在<strong>每个用户的浏览器</strong>里，不是云盘——你加的内容、投的票都先存在你自己电脑/手机里，然后通过服务器广播给在线的朋友。</p>
+            <h3>🟢 在线时</h3>
+            <ul>
+                <li>你加的每条内容会立刻广播给所有在线的朋友</li>
+                <li>朋友加的内容也会立刻同步给你</li>
+                <li>右上角圆点显示 🟢 协作在线</li>
+            </ul>
+            <h3>🟡 离线时</h3>
+            <ul>
+                <li>电脑睡眠、关掉页面、断网 = 离线</li>
+                <li>你加的数据还在你的浏览器里，不会丢</li>
+                <li>但别人看不到你的新内容，你也收不到别人的</li>
+                <li>等你再次打开页面 → 自动重新连接 + 同步</li>
+            </ul>
+            <h3>👥 让所有人看到完整数据</h3>
+            <ul>
+                <li>约大家<strong>同时打开页面一次</strong> → 数据互相合并</li>
+                <li>之后每个人的浏览器里都有完整数据</li>
+                <li>谁先打开都能让新加入的人立刻看到全部</li>
+            </ul>
+            <h3>❓ 数据没同步可能是什么情况</h3>
+            <ul>
+                <li>右上角是 🟡 离线 → 检查网络，刷新页面</li>
+                <li>对方不在线 → 等他打开页面再同步</li>
+                <li>服务器重启（部署新版本时）→ 缓存清空，要等任意一个之前在线的人再打开一次</li>
+                <li>对方加了内容但没在线 → 等他再打开时自动同步过来</li>
+            </ul>
+            <h3>💡 转发链接给新朋友</h3>
+            <p>只要你自己在线 + 之前和大家同步过一次，新朋友打开链接立刻能看到你合并过的所有数据，不需要每个创建者都上线。</p>
+            <div class="close-row">
+                <button class="btn btn-primary" onclick="closeHelpModal()">知道了</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设置弹窗 -->
+    <div class="help-modal" id="settingsModal" onclick="if(event.target===this)closeSettingsModal()">
+        <div class="help-card">
+            <h2>⚙️ 设置</h2>
+            <div class="settings-section">
+                <div class="settings-label">当前用户名</div>
+                <div id="settingsUserName" class="settings-display">-</div>
+                <div class="settings-hint">用户名随机生成，用于标识你的投票和创建的卡片，无法修改</div>
+            </div>
+            <div class="settings-divider"></div>
+            <div class="settings-section">
+                <div class="settings-label">数据管理</div>
+                <div class="settings-row">
+                    <button class="btn btn-success" onclick="exportData()">📤 导出数据</button>
+                    <button class="btn btn-outline" onclick="document.getElementById('importFile').click()">📥 导入数据</button>
+                </div>
+                <div class="settings-hint">导出会下载一个 JSON 文件，可以用来备份或迁移到其他设备</div>
+            </div>
+            <div class="settings-divider"></div>
+            <div class="settings-section">
+                <div class="settings-label">协作同步</div>
+                <button class="btn btn-outline" onclick="forceResync()" style="width:100%;margin-bottom:8px">🔄 强制重新同步</button>
+                <div class="settings-hint">如果数据没同步（比如另一端加的内容看不到），点这里重新发 hello 让其他在线客户端推送数据给你。不会丢失本地数据。</div>
+            </div>
+            <div class="settings-divider"></div>
+            <div class="settings-section">
+                <div class="settings-label">危险操作</div>
+                <button class="btn btn-danger" onclick="clearAllData()" style="width:100%">🗑️ 清空所有数据</button>
+                <div class="settings-hint">如果保存报错"exceeded the quota"，说明 localStorage 满了。清空后能继续使用，但所有数据会丢失（建议先导出备份）。</div>
+            </div>
+            <div class="close-row">
+                <button class="btn btn-primary" onclick="closeSettingsModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 移动端底部弹窗 picker -->
+    <div class="bottom-picker" id="bottomPicker" onclick="if(event.target===this)closeBottomPicker()">
+        <div class="bottom-picker-sheet">
+            <div class="bottom-picker-header">
+                <div class="bottom-picker-grab"></div>
+                <div class="bottom-picker-title" id="bottomPickerTitle">选择</div>
+                <button class="bottom-picker-close" onclick="closeBottomPicker()">×</button>
+            </div>
+            <div id="bottomPickerOptions"></div>
+        </div>
+    </div>
+
+    <!-- 锐评全屏输入 -->
+    <div class="comment-fullscreen" id="commentFullscreen">
+        <div class="comment-fs-toolbar">
+            <span class="comment-fs-title">锐评</span>
+            <button type="button" onclick="closeFullscreenComment()">完成</button>
+        </div>
+        <textarea id="commentFsInput" placeholder="写点感受...可以多写一些"></textarea>
+    </div>
+
+    <!-- 表单 -->
+    <div class="form-page" id="formPage">
+        <div class="form-header">
+            <h2 id="formPageTitle">添加新去处</h2>
+            <button class="btn btn-outline" onclick="closeForm()">← 返回</button>
+        </div>
+        <input type="hidden" id="editId" />
+        <div class="form-grid">
+            <div class="form-group">
+                <label>类别</label>
+                <select id="formCategory" onchange="onFormCategoryChange()"></select>
+                <button class="form-select-trigger" id="formCategoryTrigger" onclick="openFormCategoryPicker()">
+                    <span id="formCategoryLabel">餐厅</span><span class="arrow">▾</span>
+                </button>
+            </div>
+            <div class="form-group">
+                <label>名称 *</label>
+                <input id="formName" placeholder="山葵家·日料" />
+            </div>
+            <div class="form-group">
+                <label>位置</label>
+                <input id="formLocation" placeholder="南山区万象天地L3" />
+            </div>
+            <div class="form-group">
+                <label>
+                    人均 (元)
+                    <span class="type-toggle">
+                        <label><input type="radio" name="priceType" value="fixed" checked onchange="updatePriceUI()"> 固定</label>
+                        <label><input type="radio" name="priceType" value="range" onchange="updatePriceUI()"> 区间</label>
+                    </span>
+                </label>
+                <div id="priceFixed" class="price-input">
+                    <input id="formPrice" type="number" placeholder="150">
+                </div>
+                <div id="priceRange" class="price-input" style="display:none">
+                    <input id="formPriceMin" type="number" placeholder="100">
+                    <span class="range-sep">-</span>
+                    <input id="formPriceMax" type="number" placeholder="200">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>
+                    时间
+                    <span class="type-toggle">
+                        <label><input type="radio" name="timeType" value="fixed" checked onchange="updateTimeUI()"> 时间点</label>
+                        <label><input type="radio" name="timeType" value="range" onchange="updateTimeUI()"> 区间</label>
+                    </span>
+                </label>
+                <div id="timeFixed" class="time-input">
+                    <input id="formTime" type="datetime-local">
+                </div>
+                <div id="timeRange" class="time-input" style="display:none">
+                    <input id="formTimeStart" type="datetime-local">
+                    <span class="range-sep">-</span>
+                    <input id="formTimeEnd" type="datetime-local">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>评分</label>
+                <div class="star-selector" id="formStars">
+                    <span data-val="1" onclick="setStar(1)">☆</span>
+                    <span data-val="2" onclick="setStar(2)">☆</span>
+                    <span data-val="3" onclick="setStar(3)">☆</span>
+                    <span data-val="4" onclick="setStar(4)">☆</span>
+                    <span data-val="5" onclick="setStar(5)">☆</span>
+                </div>
+                <input type="hidden" id="formRating" value="0" />
+            </div>
+            <div class="form-group">
+                <label>意向</label>
+                <select id="formIntention">
+                    <option value="超想去">超想去</option>
+                    <option value="有点吸引我">有点吸引我</option>
+                    <option value="好像还行">好像还行</option>
+                    <option value="一般般">一般般</option>
+                    <option value="看你们">看你们</option>
+                </select>
+            </div>
+            <div class="form-group full">
+                <label>锐评</label>
+                <div class="textarea-wrap">
+                    <textarea id="formComment" placeholder="写点感受...可以多写一些，支持长文本"></textarea>
+                    <button type="button" class="fullscreen-btn" onclick="openFullscreenComment()" title="全屏输入">全屏</button>
+                </div>
+            </div>
+            <div class="form-group full">
+                <label>图片（最多 4 张，会自动压缩）</label>
+                <div class="upload-area" id="formImagePreview">
+                    <div class="upload-placeholder" onclick="document.getElementById('formImageInput').click()">+</div>
+                </div>
+                <input type="file" id="formImageInput" accept="image/*" multiple style="display:none" onchange="handleImages(event)" />
+            </div>
+        </div>
+        <div class="btn-row">
+            <button class="btn btn-outline" onclick="closeForm()">取消</button>
+            <button class="btn btn-primary" onclick="saveItem()">保存</button>
+        </div>
+    </div>
+
+    <script>
+        // ========== 数据 ==========
+        // 修复说明：
+        // 1. 种子数据 id 统一改为字符串，避免与新增数据的字符串 id 类型不一致
+        // 2. 所有按 id 查找/比较的地方一律用 String(d.id) === String(id) 转换后比较
+        //    —— HTML onclick 属性传到函数的参数永远是字符串，原本的 d.id === id 在
+        //       数字 id（旧种子数据）上必然失败，导致编辑/删除/投票/换图全部静默失效
+        // 3. 协作：通过 WebSocket 全量广播 DATA，后到覆盖先到（last-write-wins）
+        //    isApplyingRemote 锁防止"接收广播→写 localStorage→又触发广播"的死循环
+        let DATA = [];
+        const KEY = 'weekend_data';
+        const USER_KEY = 'weekend_user_name';
+        const VOTES_KEY = 'weekend_votes';  // 独立的投票数据
+        let VOTES = [];  // [{id, itemId, user, at}]
+        const CATEGORIES_KEY = 'weekend_categories';
+        const DEFAULT_CATEGORIES = ['餐厅', '看戏', '展览', '咖啡厅', '户外', '其他'];
+        let CATEGORIES = [...DEFAULT_CATEGORIES];
+        let starValue = 0;
+        let formImages = [];  // 表单上传的图片暂存（不依赖 dataset 存大 base64，避免 HTML 属性存大数据失败）
+        let formImagesProcessing = 0;  // 正在压缩的图片数量（>0 时不能保存）
+
+        // ========== 用户身份 ==========
+        const ADJ = ['轻快','活泼','安静','好奇','温柔','悠闲','勇敢','可爱','自在','机灵','温暖','灵巧'];
+        const NOUN = ['海豚','狐狸','猫咪','松鼠','考拉','燕子','月亮','蘑菇','海鸥','小鹿','浣熊','水母'];
+
+        function getUserName() {
+            let name = localStorage.getItem(USER_KEY);
+            if (!name) {
+                name = ADJ[Math.floor(Math.random()*ADJ.length)] + NOUN[Math.floor(Math.random()*NOUN.length)];
+                localStorage.setItem(USER_KEY, name);
+            }
+            return name;
+        }
+
+        function saveUserName(name) {
+            name = (name || '').trim();
+            if (!name) {
+                name = ADJ[Math.floor(Math.random()*ADJ.length)] + NOUN[Math.floor(Math.random()*NOUN.length)];
+            }
+            localStorage.setItem(USER_KEY, name);
+            // 改名只更新 UI 显示，不影响已存在的卡片作者（保留历史）
+            const input = document.getElementById('userName');
+            if (input) input.value = name;
+        }
+
+        function initUserNameInput() {
+            // 用户名只读展示，不需要 input 赋值
+            const display = document.getElementById('settingsUserName');
+            if (display) display.textContent = getUserName();
+        }
+
+        // ========== 设置弹窗 ==========
+        function openSettingsModal() {
+            // 实时刷新用户名（防止之前已生成）
+            const display = document.getElementById('settingsUserName');
+            if (display) display.textContent = getUserName();
+            document.getElementById('settingsModal').classList.add('active');
+        }
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        // 清空所有数据（localStorage + VOTES + 强制广播空数据让 server 缓存也清空）
+        function clearAllData() {
+            if (!confirm('确定清空所有数据吗？\n\n所有卡片和投票会被删除，无法恢复。\n\n建议先点"导出数据"备份。')) return;
+            DATA = [];
+            VOTES = [];
+            CATEGORIES = [...DEFAULT_CATEGORIES];
+            localStorage.removeItem(KEY);
+            localStorage.removeItem(VOTES_KEY);
+            localStorage.removeItem(CATEGORIES_KEY);
+            renderCategoryOptions();
+            // 强制广播空数据，让 server 缓存也清空（其他在线客户端也会收到清空）
+            broadcastData(true);
+            render();
+            closeSettingsModal();
+            alert('数据已清空');
+        }
+
+        // ========== 分类管理（支持自定义） ==========
+        function loadCategories() {
+            const stored = localStorage.getItem(CATEGORIES_KEY);
+            if (stored) {
+                try { CATEGORIES = JSON.parse(stored); } catch(e) { CATEGORIES = [...DEFAULT_CATEGORIES]; }
+            }
+            // 合并默认分类（防止用户删过默认的又被需要）
+            DEFAULT_CATEGORIES.forEach(c => {
+                if (!CATEGORIES.includes(c)) CATEGORIES.push(c);
+            });
+            saveCategories();
+        }
+        function saveCategories() {
+            localStorage.setItem(CATEGORIES_KEY, JSON.stringify(CATEGORIES));
+        }
+        function addCategory(name) {
+            name = (name || '').trim();
+            if (!name) return;
+            if (!CATEGORIES.includes(name)) {
+                CATEGORIES.push(name);
+                saveCategories();
+                renderCategoryOptions();
+            }
+        }
+        // 渲染所有 select 的分类选项（主页 filter + 表单）
+        function renderCategoryOptions() {
+            // 主页 filter
+            const filterSel = document.getElementById('filterCategory');
+            const currentFilter = filterSel.value || 'all';
+            filterSel.innerHTML = '<option value="all">全部分类</option>' +
+                CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('');
+            filterSel.value = currentFilter;
+            updateFilterCategoryLabel();
+
+            // 表单 select
+            const formSel = document.getElementById('formCategory');
+            const currentForm = formSel.value || (formSel.options[0] ? formSel.options[0].value : '');
+            formSel.innerHTML = CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('')
+                + '<option value="__add_new__">＋ 自定义分类...</option>';
+            formSel.value = currentForm || CATEGORIES[0] || '餐厅';
+            updateFormCategoryLabel();
+        }
+        function updateFilterCategoryLabel() {
+            const sel = document.getElementById('filterCategory');
+            const label = document.getElementById('filterCategoryLabel');
+            if (sel && label) label.textContent = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '全部分类';
+        }
+        function updateFormCategoryLabel() {
+            const sel = document.getElementById('formCategory');
+            const label = document.getElementById('formCategoryLabel');
+            if (sel && label) label.textContent = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
+        }
+        function onFormCategoryChange() {
+            const sel = document.getElementById('formCategory');
+            if (sel.value === '__add_new__') {
+                const name = prompt('请输入新分类名：');
+                if (name) {
+                    addCategory(name);
+                    document.getElementById('formCategory').value = name;
+                } else {
+                    document.getElementById('formCategory').value = CATEGORIES[0] || '餐厅';
+                }
+            }
+            updateFormCategoryLabel();
+        }
+
+        // ========== 协作说明弹窗 ==========
+        function openHelpModal() {
+            document.getElementById('helpModal').classList.add('active');
+        }
+        function closeHelpModal() {
+            document.getElementById('helpModal').classList.remove('active');
+        }
+
+        // ========== 移动端底部弹窗 picker（通用） ==========
+        let pickerCallback = null;
+        let pickerAddNewFn = null;
+        function openBottomPicker(title, options, currentValue, onSelect, opts = {}) {
+            const picker = document.getElementById('bottomPicker');
+            document.getElementById('bottomPickerTitle').textContent = title;
+            const optsHtml = options.map(opt => {
+                const value = typeof opt === 'string' ? opt : opt.value;
+                const text = typeof opt === 'string' ? opt : (opt.text || opt.value);
+                const selected = String(value) === String(currentValue) ? 'selected' : '';
+                return `<div class="bottom-picker-option ${selected}" data-value="${value}" onclick="onPickerSelect('${value}')">
+                    <span>${text}</span>
+                    ${selected ? '<span class="check">✓</span>' : ''}
+                </div>`;
+            }).join('');
+            const addNewHtml = opts.allowAddNew ? `<div class="bottom-picker-option add-new" onclick="onPickerAddNew()"><span>＋ 自定义分类...</span></div>` : '';
+            document.getElementById('bottomPickerOptions').innerHTML = optsHtml + addNewHtml;
+            pickerCallback = onSelect;
+            pickerAddNewFn = opts.allowAddNew ? opts.onAddNew : null;
+            picker.classList.add('active');
+        }
+        function closeBottomPicker() {
+            document.getElementById('bottomPicker').classList.remove('active');
+            pickerCallback = null;
+            pickerAddNewFn = null;
+        }
+        function onPickerSelect(value) {
+            if (pickerCallback) pickerCallback(value);
+            closeBottomPicker();
+        }
+        function onPickerAddNew() {
+            const name = prompt('请输入新分类名：');
+            if (name && pickerAddNewFn) pickerAddNewFn(name);
+            closeBottomPicker();
+        }
+
+        // 主页 filter 的 picker
+        function openFilterPicker(type) {
+            if (type === 'category') {
+                const sel = document.getElementById('filterCategory');
+                const options = [{value: 'all', text: '全部分类'}].concat(CATEGORIES.map(c => ({value: c, text: c})));
+                openBottomPicker('选择分类', options, sel.value, (val) => {
+                    sel.value = val;
+                    updateFilterCategoryLabel();
+                    render();
+                });
+            } else if (type === 'intention') {
+                const sel = document.getElementById('filterIntention');
+                const options = [{value: 'all', text: '全部意向'}, {value: '超想去', text: '超想去'}, {value: '有点吸引我', text: '有点吸引我'}, {value: '好像还行', text: '好像还行'}, {value: '一般般', text: '一般般'}, {value: '看你们', text: '看你们'}];
+                openBottomPicker('选择意向', options, sel.value, (val) => {
+                    sel.value = val;
+                    document.getElementById('filterIntentionLabel').textContent = sel.options[sel.selectedIndex].text;
+                    render();
+                });
+            }
+        }
+
+        // 表单 category 的 picker
+        function openFormCategoryPicker() {
+            const sel = document.getElementById('formCategory');
+            const options = CATEGORIES.map(c => ({value: c, text: c}));
+            openBottomPicker('选择分类', options, sel.value, (val) => {
+                if (val === '__add_new__') return;  // 应该走 addNew 流程
+                sel.value = val;
+                updateFormCategoryLabel();
+            }, {
+                allowAddNew: true,
+                onAddNew: (name) => {
+                    addCategory(name);
+                    document.getElementById('formCategory').value = name;
+                    updateFormCategoryLabel();
+                }
+            });
+        }
+
+        // ========== WebSocket 协作 ==========
+        let WS = null;
+        let wsRetryTimer = null;
+        let heartbeatTimer = null;
+        let isApplyingRemote = false;  // 正在应用远端数据时不广播，防止死循环
+
+        function connectWS() {
+            const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${proto}//${location.host}`;
+            try {
+                WS = new WebSocket(wsUrl);
+            } catch (e) {
+                console.error('WebSocket 创建失败:', e);
+                scheduleReconnect();
+                return;
+            }
+
+            WS.onopen = () => {
+                updateWSStatus(true);
+                console.log('🟢 协作已连接');
+                // 不广播自己的数据（避免空数据覆盖别人）
+                // 只发 hello 信号，让有数据的客户端回应我
+                if (WS.readyState === WebSocket.OPEN) {
+                    WS.send(JSON.stringify({ type: 'hello' }));
+                }
+                startHeartbeat();
+            };
+
+            WS.onmessage = (event) => {
+                try {
+                    const msg = JSON.parse(event.data);
+                    // hello 信号：有新客户端连上，回应自己的数据
+                    if (msg && typeof msg === 'object' && msg.type === 'hello') {
+                        console.log('👋 收到 hello 信号');
+                        if (DATA.length > 0 || VOTES.length > 0) {
+                            broadcastData(false);  // 非强制，避免空客户端也回应
+                        }
+                        return;
+                    }
+                    // ping/pong 心跳：忽略，不处理
+                    if (msg && typeof msg === 'object' && (msg.type === 'ping' || msg.type === 'pong')) {
+                        return;
+                    }
+                    // 数据消息：对象 {items: [...], votes: [...]}
+                    if (msg && typeof msg === 'object' && (Array.isArray(msg.items) || Array.isArray(msg.votes))) {
+                        const itemCount = Array.isArray(msg.items) ? msg.items.length : 0;
+                        const voteCount = Array.isArray(msg.votes) ? msg.votes.length : 0;
+                        console.log('📩 收到远端数据：', itemCount, '条 items,', voteCount, '条 votes');
+                        isApplyingRemote = true;
+                        try {
+                            if (Array.isArray(msg.items)) {
+                                DATA = mergeData(DATA, msg.items.map(normalizeItem));
+                            }
+                            if (Array.isArray(msg.votes)) {
+                                VOTES = mergeVotes(VOTES, msg.votes.map(normalizeVote));
+                            }
+                            localStorage.setItem(KEY, JSON.stringify(DATA));
+                            localStorage.setItem(VOTES_KEY, JSON.stringify(VOTES));
+                            render();
+                            console.log('✅ 已合并，本地现有', DATA.length, '条 items,', VOTES.length, '条 votes');
+                        } finally {
+                            isApplyingRemote = false;
+                        }
+                    }
+                } catch (e) {
+                    console.error('解析远端数据失败:', e);
+                }
+            };
+
+            WS.onclose = () => {
+                updateWSStatus(false);
+                stopHeartbeat();
+                scheduleReconnect();
+            };
+
+            WS.onerror = () => {
+                updateWSStatus(false);
+            };
+        }
+
+        function scheduleReconnect() {
+            clearTimeout(wsRetryTimer);
+            wsRetryTimer = setTimeout(connectWS, 5000);
+        }
+
+        // 心跳：每 30 秒发 ping，保持 WS 活跃 + 防止 Render 免费层休眠
+        function startHeartbeat() {
+            stopHeartbeat();
+            heartbeatTimer = setInterval(() => {
+                if (WS && WS.readyState === WebSocket.OPEN) {
+                    WS.send(JSON.stringify({ type: 'ping' }));
+                } else {
+                    // WS 不在 OPEN 状态，主动重连
+                    console.log('💔 心跳检测到 WS 断开，主动重连');
+                    connectWS();
+                }
+            }, 30000);
+        }
+        function stopHeartbeat() {
+            if (heartbeatTimer) {
+                clearInterval(heartbeatTimer);
+                heartbeatTimer = null;
+            }
+        }
+
+        // 页面切回前台时主动重新同步（电脑睡眠唤醒、tab 切换等）
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                // 页面重新可见，检查 WS 状态
+                if (!WS || WS.readyState !== WebSocket.OPEN) {
+                    console.log('🌙 页面切回前台，WS 断开，重连');
+                    connectWS();
+                } else {
+                    // WS 还连着，主动发 hello 让其他客户端回应最新数据
+                    console.log('👀 页面切回前台，发 hello 重新同步');
+                    WS.send(JSON.stringify({ type: 'hello' }));
+                }
+            }
+        });
+
+        // 网络恢复时主动重连
+        window.addEventListener('online', () => {
+            console.log('🌐 网络恢复，重连 WS');
+            if (!WS || WS.readyState !== WebSocket.OPEN) {
+                connectWS();
+            }
+        });
+
+        // 手动重连：点击 wsStatus 强制重连
+        function manualReconnect() {
+            console.log('👆 手动重连');
+            if (WS) {
+                try { WS.close(); } catch(e) {}
+            }
+            stopHeartbeat();
+            clearTimeout(wsRetryTimer);
+            connectWS();
+        }
+
+        // 强制重新同步：发 hello 让其他在线客户端推送数据
+        function forceResync() {
+            if (!WS || WS.readyState !== WebSocket.OPEN) {
+                alert('当前离线，先重连再说');
+                manualReconnect();
+                return;
+            }
+            console.log('🔄 强制重新同步，发 hello');
+            // 同时主动广播一次自己的数据（让另一端也能看到）
+            broadcastData(false);
+            // 再发 hello 请求其他客户端的数据
+            WS.send(JSON.stringify({ type: 'hello' }));
+            closeSettingsModal();
+            alert('已发送同步请求，如果其他端在线会立刻推送数据给你');
+        }
+
+        // force=true  → 用户操作触发，DATA/VOTES 即使为空也广播（删最后一条要同步给所有人）
+        // force=false → 默认，只在有数据时广播（避免首次打开空数据覆盖别人）
+        // 返回 true 表示广播成功，false 表示跳过（WS 断开或 isApplyingRemote 锁住）
+        function broadcastData(force = true) {
+            if (!WS) {
+                console.log('⚠️ 广播跳过：WS 不存在');
+                return false;
+            }
+            if (WS.readyState !== WebSocket.OPEN) {
+                console.log('⚠️ 广播跳过：WS 状态 =', WS.readyState, '（0=CONNECTING 1=OPEN 2=CLOSING 3=CLOSED）');
+                return false;
+            }
+            if (isApplyingRemote) {
+                console.log('⚠️ 广播跳过：正在处理远端数据（isApplyingRemote=true）');
+                return false;
+            }
+            if (force || DATA.length > 0 || VOTES.length > 0) {
+                const payload = JSON.stringify({ items: DATA, votes: VOTES });
+                WS.send(payload);
+                console.log('📡 已广播：', DATA.length, '条 items,', VOTES.length, '条 votes');
+                return true;
+            }
+            console.log('⚠️ 广播跳过：无数据');
+            return false;
+        }
+
+        // 标准化单条 item：兼容旧字段 image → images，item 不再含 votes/voters（投票独立存）
+        function normalizeItem(item) {
+            const images = Array.isArray(item.images) ? item.images : (item.image ? [item.image] : []);
+            const result = {
+                ...item,
+                createdBy: item.createdBy || '匿名',
+                createdAt: item.createdAt || 0,
+                updatedAt: item.updatedAt || item.createdAt || 0,
+                images: images
+            };
+            // 迁移旧意向"还可以" → "好像还行"
+            if (result.intention === '还可以') result.intention = '好像还行';
+            // 清理投票相关字段（已迁移到独立 VOTES 数组）
+            delete result.votes;
+            delete result.voters;
+            delete result.image;
+            return result;
+        }
+
+        // 标准化单条 vote
+        function normalizeVote(v) {
+            return {
+                id: String(v.id),
+                itemId: String(v.itemId),
+                user: v.user || '匿名',
+                at: v.at || 0
+            };
+        }
+
+        // 按 id 合并 items（不含投票逻辑）：本地+远端独有的都保留，共有的取 updatedAt 较新版本 + 合并 images
+        function mergeData(local, remote) {
+            const localMap = new Map(local.map(item => [String(item.id), item]));
+            const remoteMap = new Map(remote.map(item => [String(item.id), item]));
+            const result = [];
+            const seen = new Set();
+            for (const item of local) {
+                const id = String(item.id);
+                const rItem = remoteMap.get(id);
+                if (rItem) result.push(mergeItem(item, rItem));
+                else result.push(item);
+                seen.add(id);
+            }
+            for (const item of remote) {
+                const id = String(item.id);
+                if (!seen.has(id)) result.push(item);
+            }
+            return result;
+        }
+
+        // 合并同一个 item：基础字段取 updatedAt 较新版本，images 取并集（最多 4 张）
+        function mergeItem(local, remote) {
+            const localTs = local.updatedAt || local.createdAt || 0;
+            const remoteTs = remote.updatedAt || remote.createdAt || 0;
+            const base = remoteTs > localTs ? { ...remote } : { ...local };
+
+            // 合并 images（按内容去重，最多 4 张）
+            const localImgs = Array.isArray(local.images) ? local.images : [];
+            const remoteImgs = Array.isArray(remote.images) ? remote.images : [];
+            const seen = new Set();
+            const mergedImgs = [];
+            for (const img of [...localImgs, ...remoteImgs]) {
+                if (img && !seen.has(img)) {
+                    seen.add(img);
+                    mergedImgs.push(img);
+                    if (mergedImgs.length >= 4) break;
+                }
+            }
+            base.images = mergedImgs;
+            return base;
+        }
+
+        // 按 id 去重合并 votes（投票是 immutable：要么存在要么不存在，不存在"修改"，只需按 id 去重）
+        function mergeVotes(local, remote) {
+            const map = new Map();
+            local.forEach(v => map.set(v.id, v));
+            remote.forEach(v => {
+                if (!map.has(v.id)) map.set(v.id, v);
+            });
+            return Array.from(map.values());
+        }
+
+        // 查询工具：获取某 item 的投票数、是否投过
+        function getItemVotes(itemId) {
+            return VOTES.filter(v => String(v.itemId) === String(itemId));
+        }
+        function hasVoted(itemId) {
+            const user = getUserName();
+            return VOTES.some(v => String(v.itemId) === String(itemId) && v.user === user);
+        }
+
+        function updateWSStatus(online) {
+            const el = document.getElementById('wsStatus');
+            if (!el) return;
+            if (online) {
+                el.textContent = '● 协作在线';
+                el.className = 'ws-status online';
+            } else {
+                el.textContent = '● 协作离线';
+                el.className = 'ws-status offline';
+            }
+        }
+
+        function loadData() {
+            // 读 items
+            const stored = localStorage.getItem(KEY);
+            if (stored) {
+                try { DATA = JSON.parse(stored); } catch(e) { DATA = []; }
+            }
+            // 读 votes
+            const storedVotes = localStorage.getItem(VOTES_KEY);
+            if (storedVotes) {
+                try { VOTES = JSON.parse(storedVotes); } catch(e) { VOTES = []; }
+            }
+            // 迁移旧字段：item.voters → VOTES 数组
+            DATA.forEach(item => {
+                if (Array.isArray(item.voters) && item.voters.length > 0) {
+                    item.voters.forEach(user => {
+                        // 检查 VOTES 里是否已有这条记录（避免重复迁移）
+                        const exists = VOTES.some(v => String(v.itemId) === String(item.id) && v.user === user);
+                        if (!exists) {
+                            VOTES.push({
+                                id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+                                itemId: String(item.id),
+                                user: user,
+                                at: item.updatedAt || item.createdAt || Date.now()
+                            });
+                        }
+                    });
+                }
+            });
+            // 标准化
+            DATA = DATA.map(normalizeItem);
+            VOTES = VOTES.map(normalizeVote);
+            localStorage.setItem(KEY, JSON.stringify(DATA));
+            localStorage.setItem(VOTES_KEY, JSON.stringify(VOTES));
+            broadcastData(false);
+            render();
+        }
+
+        function saveData() {
+            localStorage.setItem(KEY, JSON.stringify(DATA));
+            localStorage.setItem(VOTES_KEY, JSON.stringify(VOTES));
+            const ok = broadcastData(true);  // 用户操作触发，强制广播
+            render();
+            return ok;
+        }
+
+        // ========== 渲染 ==========
+        function render() {
+            const cat = document.getElementById('filterCategory').value;
+            const intent = document.getElementById('filterIntention').value;
+            const kw = document.getElementById('filterKeyword').value.trim().toLowerCase();
+            // 同步移动端 trigger 的 label
+            updateFilterCategoryLabel();
+            const intentSel = document.getElementById('filterIntention');
+            const intentLabel = document.getElementById('filterIntentionLabel');
+            if (intentSel && intentLabel) intentLabel.textContent = intentSel.options[intentSel.selectedIndex] ? intentSel.options[intentSel.selectedIndex].text : '全部意向';
+
+            let filtered = DATA.filter(item => {
+                if (cat !== 'all' && item.category !== cat) return false;
+                if (intent !== 'all' && item.intention !== intent) return false;
+                if (kw && !item.name.toLowerCase().includes(kw)) return false;
+                return true;
+            });
+
+            // 按票数降序，同票时按创建时间升序（早加的排前面）
+            filtered.sort((a, b) => {
+                const diff = getItemVotes(b.id).length - getItemVotes(a.id).length;
+                if (diff !== 0) return diff;
+                return (a.createdAt || 0) - (b.createdAt || 0);
+            });
+
+            // 顶部统计：仅显示筛选后的总数（淘宝列表风格）
+            const resultCount = document.getElementById('resultCount');
+            if (DATA.length === 0) {
+                resultCount.textContent = '📋 还没有内容，点击右上 ➕ 添加';
+            } else if (filtered.length === DATA.length) {
+                resultCount.textContent = `📋 共 ${filtered.length} 条`;
+            } else {
+                resultCount.textContent = `📋 ${filtered.length} / ${DATA.length} 条`;
+            }
+
+            const container = document.getElementById('gridContainer');
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty">🧩 没有匹配的内容</div>';
+                return;
+            }
+
+            const tagColor = { '餐厅':'tag-orange','看戏':'tag-purple','展览':'tag-pink','咖啡厅':'tag-green','户外':'tag-green' };
+            const intentMap = { '超想去':'tag-super','好像还行':'tag-good','有点吸引我':'tag-soso','一般般':'tag-meh','看你们':'tag-up2u' };
+            const user = getUserName();
+
+            let html = '';
+            filtered.forEach(item => {
+                const stars = [1,2,3,4,5].map(s => 
+                    `<span class="${s <= (item.rating||0) ? 'active' : ''}">★</span>`
+                ).join('');
+                // 兼容旧字段 image（单图）→ images（数组）
+                const images = Array.isArray(item.images) ? item.images : (item.image ? [item.image] : []);
+                const imgHtml = images.length > 0
+                    ? `<img src="${images[0]}" /><span class="img-count">${images.length}张</span>`
+                    : '📸';
+                const tagCls = tagColor[item.category] || 'tag-gray';
+                const intentCls = intentMap[item.intention] || 'tag-up2u';
+                const safeId = String(item.id).replace(/'/g, "\\'");
+                const isOwner = !item.createdBy || item.createdBy === user || item.createdBy === '匿名';
+
+                html += `
+                    <div class="card" onclick="openDetail('${safeId}')">
+                        <div class="card-img">
+                            ${imgHtml}
+                            <span class="card-tag-overlay tag ${tagCls}">${item.category}</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-name-row">${escape(item.name)}</div>
+                            <div class="card-location-row">📍 ${escape(item.location || '未填')}</div>
+                            <div class="card-price-row">${formatPrice(item)} <small>人均</small></div>
+                            <div class="card-stars">${stars}</div>
+                            <div class="card-author">by ${escape(item.createdBy || '匿名')} · ${item.createdAt ? new Date(item.createdAt).toLocaleString('zh-CN', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : ''}</div>
+                            <div class="card-footer">
+                                <button class="vote-btn ${hasVoted(item.id) ? 'voted' : ''}" onclick="event.stopPropagation();vote('${safeId}')">${hasVoted(item.id) ? '✅' : '👍'} <span id="v-${safeId}">${getItemVotes(item.id).length}</span></button>
+                                ${isOwner ? `<div class="card-actions">
+                                    <button onclick="event.stopPropagation();openEditForm('${safeId}')">✏️</button>
+                                    <button class="del" onclick="event.stopPropagation();deleteItem('${safeId}')">🗑️</button>
+                                </div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // 价格/时间格式化
+        function formatPrice(item) {
+            const p = item.price || 0;
+            if (item.priceType === 'range' || (item.priceMax && item.priceMax > 0)) {
+                return `¥${p}-${item.priceMax}`;
+            }
+            return `¥${p}`;
+        }
+        function formatTime(item) {
+            if (!item.time) return '';
+            const start = item.time.replace('T', ' ');
+            if (item.timeType === 'range' || (item.timeEnd && item.timeEnd.length > 0)) {
+                const end = item.timeEnd.replace('T', ' ');
+                return `${escape(start)} - ${escape(end)}`;
+            }
+            return escape(start);
+        }
+
+        // ========== 详情页 ==========
+        function openDetail(id) {
+            const item = DATA.find(d => String(d.id) === String(id));
+            if (!item) return;
+            const images = Array.isArray(item.images) ? item.images : (item.image ? [item.image] : []);
+            detailImages = images;  // 保存到全局变量，供 viewImage 用
+            const tagColor = { '餐厅':'tag-orange','看戏':'tag-purple','展览':'tag-pink','咖啡厅':'tag-green','户外':'tag-green' };
+            const intentMap = { '超想去':'tag-super','好像还行':'tag-good','有点吸引我':'tag-soso','一般般':'tag-meh','看你们':'tag-up2u' };
+            const tagCls = tagColor[item.category] || 'tag-gray';
+            const intentCls = intentMap[item.intention] || 'tag-up2u';
+            const stars = [1,2,3,4,5].map(s => 
+                `<span class="${s <= (item.rating||0) ? 'active' : ''}">★</span>`
+            ).join('');
+            const user = getUserName();
+            const isOwner = !item.createdBy || item.createdBy === user || item.createdBy === '匿名';
+            const safeId = String(item.id).replace(/'/g, "\\'");
+
+            // 详情页图片：4 个方块网格，不到 4 张用空位占位
+            const gridItems = [];
+            for (let i = 0; i < 4; i++) {
+                if (images[i]) {
+                    gridItems.push(`<img class="detail-img-thumb" src="${images[i]}" onclick="viewImage('${images[i].replace(/'/g, "\\'")}')" />`);
+                } else {
+                    gridItems.push(`<div class="detail-img-empty-thumb">📷</div>`);
+                }
+            }
+            const gridHtml = `<div class="detail-img-grid">${gridItems.join('')}</div>`;
+
+            document.getElementById('detailCard').innerHTML = `
+                <div class="detail-body">
+                    <div class="detail-title">
+                        ${escape(item.name)}
+                        <span class="tag ${tagCls}">${item.category}</span>
+                    </div>
+                    <div class="detail-meta">
+                        <span>📍 ${escape(item.location || '未填')}</span>
+                        <span class="card-price">${formatPrice(item)} <small>人均</small></span>
+                        ${item.time ? `<span> 🕐 ${formatTime(item)}</span>` : ''}
+                        <span class="tag ${intentCls}">${item.intention||'看你们'}</span>
+                    </div>
+                    <div class="detail-stars">${stars}</div>
+                    ${images.length > 0 ? `<div style="font-size:12px;color:#94a3b8;margin:8px 0 4px">点击图片查看大图</div>` : ''}
+                    ${gridHtml}
+                    ${item.comment ? `<div class="detail-comment">${escape(item.comment)}</div>` : ''}
+                    <div class="detail-author">by ${escape(item.createdBy || '匿名')} · ${item.createdAt ? new Date(item.createdAt).toLocaleString('zh-CN', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : ''}</div>
+                    <div class="detail-footer">
+                        <button class="vote-btn ${hasVoted(item.id) ? 'voted' : ''}" onclick="vote('${safeId}');openDetail('${safeId}')">${hasVoted(item.id) ? '✅ 已投' : '👍 投票'} <span>${getItemVotes(item.id).length}</span></button>
+                        ${isOwner ? `<div class="card-actions">
+                            <button onclick="closeDetail();openEditForm('${safeId}')">✏️ 编辑</button>
+                            <button class="del" onclick="closeDetail();deleteItem('${safeId}')">🗑️ 删除</button>
+                        </div>` : ''}
+                    </div>
+                </div>
+            `;
+            document.getElementById('detailPage').classList.add('active');
+            document.getElementById('detailPage').scrollTop = 0;
+        }
+
+        function closeDetail() {
+            document.getElementById('detailPage').classList.remove('active');
+        }
+
+        // 大图查看：支持桌面端左右按钮 + 移动端滑动切换
+        let viewerImages = [];   // 当前查看的图片数组
+        let viewerIdx = 0;        // 当前图片索引
+        let detailImages = [];    // 当前详情页的图片数组（供 viewImage 拿到完整列表）
+
+        function viewImage(src) {
+            viewerImages = detailImages.length > 0 ? detailImages : [src];
+            viewerIdx = viewerImages.indexOf(src);
+            if (viewerIdx < 0) { viewerImages = [src]; viewerIdx = 0; }
+            updateViewer();
+            document.getElementById('imgViewer').classList.add('active');
+        }
+
+        function updateViewer() {
+            const img = document.getElementById('imgViewerImg');
+            if (viewerImages.length > 0) {
+                img.src = viewerImages[viewerIdx];
+            }
+            const counter = document.getElementById('viewerCounter');
+            if (viewerImages.length > 1) {
+                counter.textContent = (viewerIdx + 1) + ' / ' + viewerImages.length;
+                counter.style.display = 'block';
+            } else {
+                counter.style.display = 'none';
+            }
+        }
+
+        function viewerNext() {
+            if (viewerImages.length === 0) return;
+            viewerIdx = (viewerIdx + 1) % viewerImages.length;
+            updateViewer();
+        }
+
+        function viewerPrev() {
+            if (viewerImages.length === 0) return;
+            viewerIdx = (viewerIdx - 1 + viewerImages.length) % viewerImages.length;
+            updateViewer();
+        }
+
+        function closeImageViewer() {
+            document.getElementById('imgViewer').classList.remove('active');
+        }
+
+        // 移动端滑动切换图片
+        (function() {
+            let touchStartX = 0, touchStartY = 0;
+            const viewer = document.getElementById('imgViewer');
+            if (!viewer) return;
+            viewer.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+            viewer.addEventListener('touchend', (e) => {
+                const dx = e.changedTouches[0].clientX - touchStartX;
+                const dy = e.changedTouches[0].clientY - touchStartY;
+                // 横向滑动距离 > 纵向 && > 50px，才算切换图片
+                if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+                    if (dx > 0) viewerPrev();
+                    else viewerNext();
+                }
+            }, { passive: true });
+        })();
+
+        // 锐评全屏输入：打开时同步内容，关闭时同步回去
+        function openFullscreenComment() {
+            const mainTa = document.getElementById('formComment');
+            const fsTa = document.getElementById('commentFsInput');
+            fsTa.value = mainTa.value;  // 主输入框内容 → 全屏输入框
+            document.getElementById('commentFullscreen').classList.add('active');
+            setTimeout(() => fsTa.focus(), 50);
+        }
+
+        function closeFullscreenComment() {
+            const mainTa = document.getElementById('formComment');
+            const fsTa = document.getElementById('commentFsInput');
+            mainTa.value = fsTa.value;  // 全屏输入框内容 → 主输入框
+            document.getElementById('commentFullscreen').classList.remove('active');
+        }
+
+        // ESC：优先关大图 > 退出锐评全屏 > 关详情页 > 关设置/说明弹窗
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            const viewer = document.getElementById('imgViewer');
+            if (viewer.classList.contains('active')) {
+                closeImageViewer();
+                return;
+            }
+            const cfs = document.getElementById('commentFullscreen');
+            if (cfs.classList.contains('active')) {
+                closeFullscreenComment();
+                return;
+            }
+            const detail = document.getElementById('detailPage');
+            if (detail.classList.contains('active')) {
+                closeDetail();
+                return;
+            }
+            const settings = document.getElementById('settingsModal');
+            if (settings.classList.contains('active')) {
+                closeSettingsModal();
+                return;
+            }
+            const help = document.getElementById('helpModal');
+            if (help.classList.contains('active')) {
+                closeHelpModal();
+                return;
+            }
+            const picker = document.getElementById('bottomPicker');
+            if (picker.classList.contains('active')) {
+                closeBottomPicker();
+                return;
+            }
+        });
+
+        function escape(text) {
+            if (!text) return '';
+            return String(text).replace(/[&<>"]/g, function(m) {
+                return m === '&' ? '&amp;' : m === '<' ? '&lt;' : m === '>' ? '&gt;' : '&quot;';
+            });
+        }
+
+        // ========== 投票（独立数据，不依附于卡片） ==========
+        function vote(itemId) {
+            const user = getUserName();
+            const existing = VOTES.find(v => String(v.itemId) === String(itemId) && v.user === user);
+            if (existing) {
+                // 已投过：撤回
+                VOTES = VOTES.filter(v => v.id !== existing.id);
+            } else {
+                // 新投一票
+                VOTES.push({
+                    id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+                    itemId: String(itemId),
+                    user: user,
+                    at: Date.now()
+                });
+            }
+            // 只更新 localStorage + 渲染，不重发整个 DATA（避免大 base64 卡死）
+            localStorage.setItem(VOTES_KEY, JSON.stringify(VOTES));
+            render();
+            // 只广播 VOTES（小数据，几十字节），不广播 items（大 base64 可能超 WS 限制）
+            broadcastVotes();
+        }
+        // hasVoted 函数已移到上面的"查询工具"区域
+
+        // 单独广播 VOTES（不广播 items，避免大 base64 重发）
+        function broadcastVotes() {
+            if (WS && WS.readyState === WebSocket.OPEN && !isApplyingRemote) {
+                WS.send(JSON.stringify({ votes: VOTES }));
+            }
+        }
+
+        // ========== 删除 ==========
+        function deleteItem(id) {
+            const item = DATA.find(d => String(d.id) === String(id));
+            if (!item) return;
+            // 权限检查：只有作者能删除
+            if (item.createdBy && item.createdBy !== getUserName()) {
+                alert('只能删除自己创建的卡片');
+                return;
+            }
+            if (!confirm(`确定删除 "${item.name}" 吗？`)) return;
+            DATA = DATA.filter(d => String(d.id) !== String(id));
+            saveData();
+        }
+
+        // ========== 表单 ==========
+        function showForm(title, id) {
+            document.querySelectorAll('.hide-when-form').forEach(el => el.classList.add('hidden'));
+            document.getElementById('formPage').classList.add('active');
+            document.getElementById('formPageTitle').textContent = title;
+            document.getElementById('editId').value = id || '';
+            document.getElementById('formImagePreview').innerHTML = `<div class="upload-placeholder" onclick="document.getElementById('formImageInput').click()">+</div>`;
+            starValue = 0;
+            document.getElementById('formRating').value = 0;
+            updateStars();
+            document.getElementById('formPage').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function closeForm() {
+            document.querySelectorAll('.hide-when-form').forEach(el => el.classList.remove('hidden'));
+            document.getElementById('formPage').classList.remove('active');
+        }
+
+        // 价格/时间类型切换 UI
+        function updatePriceUI() {
+            const isRange = document.querySelector('input[name="priceType"]:checked').value === 'range';
+            document.getElementById('priceFixed').style.display = isRange ? 'none' : 'flex';
+            document.getElementById('priceRange').style.display = isRange ? 'flex' : 'none';
+        }
+        function updateTimeUI() {
+            const isRange = document.querySelector('input[name="timeType"]:checked').value === 'range';
+            document.getElementById('timeFixed').style.display = isRange ? 'none' : 'flex';
+            document.getElementById('timeRange').style.display = isRange ? 'flex' : 'none';
+        }
+
+        function openAddForm() {
+            showForm('添加新去处', '');
+            document.getElementById('formCategory').value = CATEGORIES[0] || '餐厅';
+            updateFormCategoryLabel();
+            document.getElementById('formName').value = '';
+            document.getElementById('formLocation').value = '';
+            // 价格：默认固定
+            document.querySelector('input[name="priceType"][value="fixed"]').checked = true;
+            document.getElementById('formPrice').value = '';
+            document.getElementById('formPriceMin').value = '';
+            document.getElementById('formPriceMax').value = '';
+            updatePriceUI();
+            // 时间：默认时间点
+            document.querySelector('input[name="timeType"][value="fixed"]').checked = true;
+            document.getElementById('formTime').value = '';
+            document.getElementById('formTimeStart').value = '';
+            document.getElementById('formTimeEnd').value = '';
+            updateTimeUI();
+            document.getElementById('formComment').value = '';
+            document.getElementById('formIntention').value = '超想去';
+            document.getElementById('formRating').value = 0;
+            starValue = 0;
+            updateStars();
+            // 重置图片预览（用全局变量存，不依赖 dataset）
+            formImages = [];
+            formImagesProcessing = 0;
+            const preview = document.getElementById('formImagePreview');
+            preview.innerHTML = '<div class="upload-placeholder" onclick="document.getElementById(\'formImageInput\').click()">+</div>';
+        }
+
+        function openEditForm(id) {
+            const item = DATA.find(d => String(d.id) === String(id));
+            if (!item) return;
+            // 权限检查：只有作者能编辑
+            if (item.createdBy && item.createdBy !== getUserName()) {
+                alert('只能编辑自己创建的卡片');
+                return;
+            }
+            showForm('编辑', id);
+            // 如果 item.category 不在 CATEGORIES 里，自动加进去
+            if (item.category && !CATEGORIES.includes(item.category)) {
+                addCategory(item.category);
+                renderCategoryOptions();
+            }
+            document.getElementById('formCategory').value = item.category || (CATEGORIES[0] || '餐厅');
+            updateFormCategoryLabel();
+            document.getElementById('formName').value = item.name || '';
+            document.getElementById('formLocation').value = item.location || '';
+            const isPriceRange = item.priceType === 'range' || (item.priceMax && item.priceMax > 0);
+            document.querySelector(`input[name="priceType"][value="${isPriceRange ? 'range' : 'fixed'}"]`).checked = true;
+            document.getElementById('formPrice').value = item.price || '';
+            document.getElementById('formPriceMin').value = isPriceRange ? (item.price || '') : '';
+            document.getElementById('formPriceMax').value = isPriceRange ? (item.priceMax || '') : '';
+            updatePriceUI();
+            const isTimeRange = item.timeType === 'range' || (item.timeEnd && item.timeEnd.length > 0);
+            document.querySelector(`input[name="timeType"][value="${isTimeRange ? 'range' : 'fixed'}"]`).checked = true;
+            document.getElementById('formTime').value = item.time || '';
+            document.getElementById('formTimeStart').value = isTimeRange ? (item.time || '') : '';
+            document.getElementById('formTimeEnd').value = isTimeRange ? (item.timeEnd || '') : '';
+            updateTimeUI();
+            document.getElementById('formComment').value = item.comment || '';
+            document.getElementById('formIntention').value = item.intention || '看你们';
+            starValue = item.rating || 0;
+            document.getElementById('formRating').value = starValue;
+            updateStars();
+
+            // 用全局变量 formImages 存图片，不依赖 dataset
+            formImages = Array.isArray(item.images) ? [...item.images] : (item.image ? [item.image] : []);
+            formImagesProcessing = 0;
+            const preview = document.getElementById('formImagePreview');
+            preview.innerHTML = '';
+            formImages.forEach((src, idx) => {
+                preview.appendChild(makeImgWrap(src, idx));
+            });
+            const ph = document.createElement('div');
+            ph.className = 'upload-placeholder';
+            ph.textContent = '+';
+            ph.onclick = () => document.getElementById('formImageInput').click();
+            preview.appendChild(ph);
+        }
+
+        function makeImgWrap(src, idx) {
+            const wrap = document.createElement('div');
+            wrap.className = 'img-wrap';
+            const img = document.createElement('img');
+            img.src = src;
+            const btn = document.createElement('button');
+            btn.className = 'img-remove';
+            btn.textContent = '×';
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                // 用全局变量 formImages，不依赖 dataset
+                formImages.splice(idx, 1);
+                // 重新渲染预览区
+                const preview = document.getElementById('formImagePreview');
+                preview.innerHTML = '';
+                formImages.forEach((s, i) => preview.appendChild(makeImgWrap(s, i)));
+                const ph = document.createElement('div');
+                ph.className = 'upload-placeholder';
+                ph.textContent = '+';
+                ph.onclick = () => document.getElementById('formImageInput').click();
+                preview.appendChild(ph);
+            };
+            wrap.appendChild(img);
+            wrap.appendChild(btn);
+            return wrap;
+        }
+
+        function setStar(val) {
+            starValue = val;
+            document.getElementById('formRating').value = val;
+            updateStars();
+        }
+
+        function updateStars() {
+            document.querySelectorAll('#formStars span').forEach(el => {
+                const v = parseInt(el.dataset.val);
+                el.textContent = v <= starValue ? '★' : '☆';
+                el.className = v <= starValue ? 'active' : '';
+            });
+        }
+
+        // 压缩图片：限制最大宽度 800px，质量 0.7，返回 Blob（FormData 能直接上传 Blob）
+        function compressImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const MAX_W = 800;
+                        let w = img.width, h = img.height;
+                        if (w > MAX_W) {
+                            h = Math.round(h * (MAX_W / w));
+                            w = MAX_W;
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        // canvas 转 Blob（不是 data URL），FormData 接受 Blob
+                        canvas.toBlob((blob) => {
+                            if (blob) resolve(blob);
+                            else reject(new Error('canvas.toBlob 失败'));
+                        }, 'image/jpeg', 0.7);
+                    };
+                    img.onerror = reject;
+                    img.src = ev.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // 上传图片到 Cloudinary（unsigned upload 模式，前端直接上传 Blob）
+        const CLOUDINARY_CLOUD_NAME = 'la5j8aok';
+        const CLOUDINARY_UPLOAD_PRESET = 'ml_default';
+        async function uploadImage(file) {
+            const blob = await compressImage(file);
+            const formData = new FormData();
+            formData.append('file', blob, 'image.jpg');  // Blob 当 File 用，给个文件名
+            formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+            const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            if (data.error) {
+                throw new Error('Cloudinary: ' + (data.error.message || JSON.stringify(data.error)));
+            }
+            return data.secure_url;  // 返回 Cloudinary URL
+        }
+
+        async function handleImages(e) {
+            const files = Array.from(e.target.files);
+            if (!files.length) return;
+            const remaining = 4 - formImages.length;
+            if (remaining <= 0) {
+                alert('最多只能上传 4 张图片');
+                e.target.value = '';
+                return;
+            }
+            const toProcess = files.slice(0, remaining);
+            if (files.length > remaining) {
+                alert(`只能再传 ${remaining} 张，多余的已忽略`);
+            }
+            // 显示上传中提示
+            const preview = document.getElementById('formImagePreview');
+            const loadingPh = document.createElement('div');
+            loadingPh.className = 'upload-placeholder';
+            loadingPh.textContent = '...';
+            loadingPh.style.opacity = '0.5';
+            preview.appendChild(loadingPh);
+            formImagesProcessing += toProcess.length;
+            let processed = 0;
+            let failed = 0;
+            toProcess.forEach(file => {
+                uploadImage(file).then(url => {
+                    formImages.push(url);
+                    processed++;
+                    formImagesProcessing--;
+                    if (processed + failed === toProcess.length) {
+                        // 全部处理完成，重新渲染
+                        preview.innerHTML = '';
+                        formImages.forEach((src, i) => preview.appendChild(makeImgWrap(src, i)));
+                        if (formImages.length < 4) {
+                            const ph = document.createElement('div');
+                            ph.className = 'upload-placeholder';
+                            ph.textContent = '+';
+                            ph.onclick = () => document.getElementById('formImageInput').click();
+                            preview.appendChild(ph);
+                        }
+                        if (failed > 0) {
+                            alert(`${failed} 张图片上传失败，已跳过`);
+                        }
+                    }
+                }).catch(err => {
+                    console.error('图片上传失败:', err);
+                    failed++;
+                    formImagesProcessing--;
+                    if (processed + failed === toProcess.length) {
+                        preview.innerHTML = '';
+                        formImages.forEach((src, i) => preview.appendChild(makeImgWrap(src, i)));
+                        if (formImages.length < 4) {
+                            const ph = document.createElement('div');
+                            ph.className = 'upload-placeholder';
+                            ph.textContent = '+';
+                            ph.onclick = () => document.getElementById('formImageInput').click();
+                            preview.appendChild(ph);
+                        }
+                        alert(`${failed} 张图片上传失败：${err.message}`);
+                    }
+                });
+            });
+            e.target.value = '';
+        }
+
+        function saveItem() {
+            // 防止图片还在压缩时保存
+            if (formImagesProcessing > 0) {
+                alert('图片还在压缩中，请等几秒再保存');
+                return;
+            }
+            const id = document.getElementById('editId').value;
+            const category = document.getElementById('formCategory').value;
+            const name = document.getElementById('formName').value.trim();
+            if (!name) { alert('请填写名称'); return; }
+            const location = document.getElementById('formLocation').value.trim();
+            const rating = parseInt(document.getElementById('formRating').value) || 0;
+            const comment = document.getElementById('formComment').value.trim();
+            const intention = document.getElementById('formIntention').value;
+
+            // 价格：根据 toggle 读取
+            const priceType = document.querySelector('input[name="priceType"]:checked').value;
+            let price = 0, priceMax = 0;
+            if (priceType === 'range') {
+                price = parseFloat(document.getElementById('formPriceMin').value) || 0;
+                priceMax = parseFloat(document.getElementById('formPriceMax').value) || 0;
+                if (priceMax < price) priceMax = price;
+            } else {
+                price = parseFloat(document.getElementById('formPrice').value) || 0;
+            }
+
+            // 时间：根据 toggle 读取
+            const timeType = document.querySelector('input[name="timeType"]:checked').value;
+            let time = '', timeEnd = '';
+            if (timeType === 'range') {
+                time = document.getElementById('formTimeStart').value;
+                timeEnd = document.getElementById('formTimeEnd').value;
+            } else {
+                time = document.getElementById('formTime').value;
+            }
+
+            // 从全局变量 formImages 读图片（不依赖 dataset）
+            const imagesArr = [...formImages];
+
+            try {
+                if (id) {
+                    const item = DATA.find(d => String(d.id) === String(id));
+                    if (item) {
+                        if (item.createdBy && item.createdBy !== getUserName()) {
+                            alert('只能编辑自己创建的卡片');
+                            return;
+                        }
+                        item.category = category; item.name = name;
+                        item.location = location;
+                        item.priceType = priceType; item.price = price;
+                        if (priceType === 'range') item.priceMax = priceMax;
+                        else delete item.priceMax;
+                        item.timeType = timeType; item.time = time;
+                        if (timeType === 'range') item.timeEnd = timeEnd;
+                        else delete item.timeEnd;
+                        item.rating = rating;
+                        item.comment = comment; item.intention = intention;
+                        item.images = imagesArr;
+                        delete item.image;
+                        item.updatedAt = Date.now();
+                    }
+                } else {
+                    const now = Date.now();
+                    const newItem = {
+                        id: now + '_' + Math.random().toString(36).substr(2, 6),
+                        category, name, location,
+                        priceType, price,
+                        timeType, time,
+                        rating, comment, intention,
+                        images: imagesArr,
+                        createdBy: getUserName(),
+                        createdAt: now,
+                        updatedAt: now
+                    };
+                    if (priceType === 'range') newItem.priceMax = priceMax;
+                    if (timeType === 'range') newItem.timeEnd = timeEnd;
+                    DATA.push(newItem);
+                }
+                const broadcasted = saveData();
+                closeForm();
+                if (!broadcasted) {
+                    alert('已保存到本地，但没能广播给其他在线的人。\n\n点右上角圆点强制重连，再点设置 → 强制重新同步。');
+                }
+            } catch (e) {
+                console.error('保存失败:', e);
+                alert('保存失败：' + e.message + '\n（如果是 localStorage 容量问题，可能旧数据太多了，可以试试清空浏览器数据重新开始）');
+            }
+        }
+
+        // ========== 导入导出 ==========
+        function exportData() {
+            const blob = new Blob([JSON.stringify(DATA, null, 2)], {type:'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `周末去处_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                try {
+                    const imported = JSON.parse(ev.target.result);
+                    if (Array.isArray(imported)) {
+                        if (!confirm(`导入 ${imported.length} 条数据？\n\n注意：旧数据里的 base64 图片会被自动过滤掉（避免 localStorage 容量满 + server 内存爆），只保留 Cloudinary URL 图片。`)) return;
+                        let removedBase64Count = 0;
+                        DATA = imported.map(item => {
+                            // 读取旧 images 字段
+                            let rawImages = Array.isArray(item.images) ? item.images : (item.image ? [item.image] : []);
+                            // 关键：过滤掉 base64 图片，只保留 URL（http 开头的）
+                            const cleanImages = rawImages.filter(src => {
+                                if (typeof src !== 'string') return false;
+                                if (src.startsWith('http')) return true;  // 保留 URL
+                                removedBase64Count++;  // 统计被过滤的 base64
+                                return false;
+                            });
+                            const result = {
+                                ...item,
+                                createdBy: item.createdBy || '匿名',
+                                createdAt: item.createdAt || 0,
+                                updatedAt: item.updatedAt || item.createdAt || 0,
+                                images: cleanImages  // 用清洗后的 images
+                            };
+                            // 迁移旧意向"还可以" → "好像还行"
+                            if (result.intention === '还可以') result.intention = '好像还行';
+                            // 迁移 voters 到 VOTES
+                            if (Array.isArray(item.voters)) {
+                                item.voters.forEach(user => {
+                                    const exists = VOTES.some(v => String(v.itemId) === String(item.id) && v.user === user);
+                                    if (!exists) {
+                                        VOTES.push({
+                                            id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+                                            itemId: String(item.id),
+                                            user: user,
+                                            at: result.updatedAt || result.createdAt || Date.now()
+                                        });
+                                    }
+                                });
+                            }
+                            return normalizeItem(result);
+                        });
+                        saveData();
+                        alert(`导入成功！\n\n导入了 ${DATA.length} 条数据。\n过滤掉了 ${removedBase64Count} 张旧 base64 图片（避免内存爆）。`);
+                    } else { alert('格式错误'); }
+                } catch(err) { alert('文件解析失败'); }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        // ========== 启动 ==========
+        initUserNameInput();
+        loadCategories();
+        renderCategoryOptions();
+        loadData();
+        render();
+        connectWS();
+    </script>
+</body>
+</html>
